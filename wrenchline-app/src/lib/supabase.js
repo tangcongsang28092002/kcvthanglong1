@@ -10,6 +10,15 @@ export const ROLES = {
   service_advisor: 'Cố vấn dịch vụ',
   foreman: 'Tổ trưởng',
   technician: 'Kỹ thuật viên',
+  paint_team: 'Tổ sơn',
+}
+
+export const PAINT_ORDER_STATUSES = ['pending', 'in_progress', 'completed']
+
+export const PAINT_STATUS_LABELS = {
+  pending: 'Chờ xử lý',
+  in_progress: 'Đang sơn',
+  completed: 'Hoàn thành',
 }
 
 export const VEHICLE_STATUSES = [

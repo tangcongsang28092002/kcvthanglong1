@@ -5,6 +5,7 @@ import AdvisorDashboard from './pages/AdvisorDashboard'
 import ManagementDashboard from './pages/ManagementDashboard'
 import ForemanDashboard from './pages/ForemanDashboard'
 import TechnicianDashboard from './pages/TechnicianDashboard'
+import PaintTeamDashboard from './pages/PaintTeamDashboard'
 
 function Gate() {
   const { session, profile, loading, signOut } = useAuth()
@@ -41,8 +42,11 @@ function Gate() {
     <Layout>
       {profile?.role === 'admin' && <ManagementDashboard />}
       {profile?.role === 'service_advisor' && <AdvisorDashboard />}
-      {profile?.role === 'foreman' && <ForemanDashboard />}
-      {profile?.role === 'technician' && <TechnicianDashboard />}
+      {(profile?.role === 'paint_team' || (profile?.team_group && profile.team_group.toLowerCase().includes('sơn'))) && profile?.role !== 'admin' && profile?.role !== 'service_advisor' && <PaintTeamDashboard />}
+      {profile?.role === 'foreman' && profile?.team_group && !profile.team_group.toLowerCase().includes('sơn') && <ForemanDashboard />}
+      {profile?.role === 'technician' && profile?.team_group && !profile.team_group.toLowerCase().includes('sơn') && <TechnicianDashboard />}
+      {profile?.role === 'foreman' && !profile?.team_group && <ForemanDashboard />}
+      {profile?.role === 'technician' && !profile?.team_group && <TechnicianDashboard />}
       {!profile && (
         <p style={{ color: 'var(--text-muted)', padding: '32px 0' }}>Đang khởi tạo hồ sơ của bạn…</p>
       )}

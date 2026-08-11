@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { ROLES } from '../lib/supabase'
 import VriPdiChecklist from './VriPdiChecklist'
+import PaintNotificationToast from './PaintNotificationToast'
 
 export default function Layout({ children }) {
   const { profile, signOut } = useAuth()
@@ -87,6 +88,7 @@ export default function Layout({ children }) {
           children
         )}
       </main>
+      <PaintNotificationToast />
     </div>
   )
 }

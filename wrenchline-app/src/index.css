@@ -379,3 +379,53 @@ h1, h2, h3 {
   }
 }
 
+/* ─── Paint Orders / Record Table ─────────────────────── */
+.record-table-wrap {
+  display: block;
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+@media (max-width: 768px) {
+  .record-table-wrap { display: none; }
+}
+
+.record-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 700px;
+}
+.record-table thead tr {
+  background: var(--surface-raised);
+}
+.record-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.record-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+}
+.record-table tbody tr:last-child td { border-bottom: none; }
+.record-table tbody tr:hover td { background: var(--surface-raised); }
+
+/* Mobile-only cards */
+.record-cards {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+@media (max-width: 768px) {
+  .record-cards { display: flex; }
+}
+

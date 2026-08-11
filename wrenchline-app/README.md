@@ -8,10 +8,11 @@ ngày giờ hiển thị theo múi giờ TP. Hồ Chí Minh (GMT+7).
 
 | Vai trò | Quyền hạn |
 |---|---|
-| **Quản lý** (`admin`) | Toàn quyền: xem/sửa mọi phiếu xe, phân công tổ trưởng, giao việc, đổi vị trí công việc của bất kỳ nhân sự nào, xác nhận tài khoản mới đăng ký. |
-| **Cố vấn dịch vụ** | Tạo phiếu theo dõi khi xe vào xưởng (biển số, khách hàng, SĐT, ngày vào/dự kiến xong, nội dung sửa chữa). Xem tất cả phiếu. |
-| **Tổ trưởng** | Xem xe được phân công, theo dõi tiến độ kỹ thuật viên, cập nhật trạng thái xe, nghiệm thu chất lượng sau sửa chữa (đạt/cần làm lại). |
-| **Kỹ thuật viên** | Xem công việc được giao và cập nhật trạng thái (chờ xử lý → đang thực hiện → hoàn thành). |
+| **Quản lý** (`admin`) | Toàn quyền: xem/sửa mọi phiếu xe, phân công tổ trưởng, giao việc, đổi vị trí công việc của bất kỳ nhân sự nào, xác nhận tài khoản mới đăng ký, lên đơn sơn xe. |
+| **Cố vấn dịch vụ** (`service_advisor`) | Tạo phiếu theo dõi khi xe vào xưởng. Xem tất cả phiếu. Lên đơn sơn xe mới. |
+| **Tổ trưởng** (`foreman`) | Xem xe được phân công, theo dõi tiến độ kỹ thuật viên, cập nhật trạng thái xe, nghiệm thu chất lượng sau sửa chữa. |
+| **Kỹ thuật viên** (`technician`) | Xem công việc được giao và cập nhật trạng thái (chờ xử lý → đang thực hiện → hoàn thành). |
+| **Tổ sơn** (`paint_team`) | Xem danh sách đơn sơn xe được phân công. Bấm **Bắt đầu** khi nhận xe, **Hoàn thành** khi sơn xong. |
 
 ## Xác nhận tài khoản
 

@@ -4,8 +4,16 @@ import StatusBadge from '../components/StatusBadge'
 import RepairTicketForm from '../components/RepairTicketForm'
 import RecordFilterBar from '../components/RecordFilterBar'
 import RepairItemsPreview from '../components/RepairItemsPreview'
+import PaintOrderForm from '../components/PaintOrderForm'
+import PaintOrdersTable from '../components/PaintOrdersTable'
+
+const MAIN_TABS = [
+  { key: 'vehicles', label: 'Tiếp nhận & Phiếu xe' },
+  { key: 'paint', label: '🎨 Sơn xe mới' },
+]
 
 export default function AdvisorDashboard() {
+  const [mainTab, setMainTab] = useState('vehicles')
   const [vehicles, setVehicles] = useState([])
   const [tasksByVehicle, setTasksByVehicle] = useState({})
   const [loading, setLoading] = useState(true)
@@ -50,13 +58,40 @@ export default function AdvisorDashboard() {
     })
   }, [vehicles, search, status])
 
+  const [paintOrders, setPaintOrders] = useState([])
+  const [paintFilter, setPaintFilter] = useState('all')
+
+  async function loadPaintOrders() {
+    const { data } = await supabase
+      .from('paint_orders')
+      .select('*, creator:created_by(full_name), handler:assigned_to(full_name)')
+      .order('created_at', { ascending: false })
+    setPaintOrders(data || [])
+  }
+
+  useEffect(() => { loadPaintOrders() }, [])
+
+  const filteredPaint = paintFilter === 'all' ? paintOrders : paintOrders.filter(o => o.status === paintFilter)
+
   return (
-    <div className="dashboard-grid">
-      <div>
-        <h2 style={{ fontSize: 22, marginBottom: 4 }}>Tiếp nhận xe mới</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>Ghi nhận thông tin khi xe vào xưởng, khai báo hạng mục sửa chữa và phân công tổ kỹ thuật viên.</p>
-        <RepairTicketForm onCreated={loadVehicles} />
+    <div>
+      {/* Main tab bar */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: 'var(--bg)', padding: 4, borderRadius: 10, border: '1px solid var(--border)', width: 'fit-content' }}>
+        {MAIN_TABS.map(t => (
+          <button key={t.key} type="button" className="btn" onClick={() => setMainTab(t.key)}
+            style={{ fontSize: 14, border: 'none', padding: '8px 18px', borderRadius: 8, background: mainTab === t.key ? 'var(--surface-raised)' : 'transparent', color: mainTab === t.key ? 'var(--text)' : 'var(--text-muted)', fontWeight: mainTab === t.key ? 700 : 400 }}>
+            {t.label}
+          </button>
+        ))}
       </div>
+
+      {mainTab === 'vehicles' && (
+        <div className="dashboard-grid">
+          <div>
+            <h2 style={{ fontSize: 22, marginBottom: 4 }}>Tiếp nhận xe mới</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>Ghi nhận thông tin khi xe vào xưởng, khai báo hạng mục sửa chữa và phân công tổ kỹ thuật viên.</p>
+            <RepairTicketForm onCreated={loadVehicles} />
+          </div>
 
       <div>
         <h2 style={{ fontSize: 22, marginBottom: 16 }}>Tất cả phiếu theo dõi</h2>
@@ -117,6 +152,33 @@ export default function AdvisorDashboard() {
           </>
         )}
       </div>
+    </div>
+      )}
+
+      {mainTab === 'paint' && (
+        <div>
+          <h2 style={{ fontSize: 22, marginBottom: 4 }}>Sơn xe mới</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>Tạo đơn sơn xe. Sau khi tạo, đơn sẽ tự động chuyển đến <strong style={{ color: 'var(--accent)' }}>Tổ sơn</strong>.</p>
+
+          <div className="card" style={{ marginBottom: 28 }}>
+            <PaintOrderForm onCreated={loadPaintOrders} />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
+            <h3 style={{ fontSize: 18, margin: 0 }}>Danh sách đơn Sơn xe</h3>
+            <div style={{ display: 'flex', gap: 4, background: 'var(--bg)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
+              {[{ k: 'all', l: 'Tất cả' }, { k: 'pending', l: 'Chờ xử lý' }, { k: 'in_progress', l: 'Đang sơn' }, { k: 'completed', l: 'Hoàn thành' }].map(f => (
+                <button key={f.k} type="button" className="btn" onClick={() => setPaintFilter(f.k)}
+                  style={{ fontSize: 12, border: 'none', padding: '4px 10px', background: paintFilter === f.k ? 'var(--surface-raised)' : 'transparent', color: paintFilter === f.k ? 'var(--text)' : 'var(--text-muted)', fontWeight: paintFilter === f.k ? 600 : 400 }}>
+                  {f.l}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <PaintOrdersTable orders={filteredPaint} onRefresh={loadPaintOrders} />
+        </div>
+      )}
     </div>
   )
 }

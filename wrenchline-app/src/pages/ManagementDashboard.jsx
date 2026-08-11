@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, PAINT_STATUS_LABELS } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import StatusBadge from '../components/StatusBadge'
 import RepairTicketForm from '../components/RepairTicketForm'
 import RecordFilterBar from '../components/RecordFilterBar'
 import RepairItemsPreview from '../components/RepairItemsPreview'
+import PaintOrderForm from '../components/PaintOrderForm'
+import PaintOrdersTable from '../components/PaintOrdersTable'
 import { ROLES } from '../lib/supabase'
 
 const TABS = [
   { key: 'create', label: 'Lên phiếu' },
   { key: 'vehicles', label: 'Tất cả xe' },
   { key: 'assign', label: 'Giao việc' },
+  { key: 'paint', label: '🎨 Sơn xe' },
   { key: 'staff', label: 'Nhân sự & vị trí' },
 ]
 
@@ -20,6 +23,8 @@ export default function ManagementDashboard() {
   const [vehicles, setVehicles] = useState([])
   const [staff, setStaff] = useState([])
   const [tasks, setTasks] = useState([])
+  const [paintOrders, setPaintOrders] = useState([])
+  const [paintFilter, setPaintFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
@@ -30,14 +35,16 @@ export default function ManagementDashboard() {
 
   async function loadAll() {
     setLoading(true)
-    const [{ data: v }, { data: p }, { data: t }] = await Promise.all([
+    const [{ data: v }, { data: p }, { data: t }, { data: po }] = await Promise.all([
       supabase.from('vehicles').select('*').order('created_at', { ascending: false }),
       supabase.from('profiles').select('*').order('full_name'),
       supabase.from('tasks').select('*, vehicles(license_plate), assignee:assigned_to(full_name)').order('created_at', { ascending: false }),
+      supabase.from('paint_orders').select('*, creator:created_by(full_name), handler:assigned_to(full_name)').order('created_at', { ascending: false }),
     ])
     setVehicles(v || [])
     setStaff(p || [])
     setTasks(t || [])
+    setPaintOrders(po || [])
     setLoading(false)
   }
 
@@ -73,6 +80,11 @@ export default function ManagementDashboard() {
 
   async function changeRole(userId, role) {
     await supabase.from('profiles').update({ role }).eq('id', userId)
+    loadAll()
+  }
+
+  async function changeTeamGroup(userId, team_group) {
+    await supabase.from('profiles').update({ team_group }).eq('id', userId)
     loadAll()
   }
 
@@ -219,13 +231,42 @@ export default function ManagementDashboard() {
             </div>
           )}
 
+          {tab === 'paint' && (
+            <div>
+              <h3 style={{ fontSize: 18, marginBottom: 8 }}>Lên đơn Sơn xe mới</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>
+                Tạo đơn sơn xe mới. Sau khi tạo, đơn sẽ tự động chuyển cho <strong style={{ color: 'var(--accent)' }}>Tổ sơn</strong>.
+              </p>
+              <div className="card" style={{ marginBottom: 24 }}>
+                <PaintOrderForm onCreated={loadAll} />
+              </div>
+
+              <h3 style={{ fontSize: 18, marginBottom: 12 }}>Danh sách đơn Sơn xe</h3>
+              {/* Filter */}
+              <div style={{ display: 'flex', gap: 4, background: 'var(--bg)', padding: 4, borderRadius: 8, border: '1px solid var(--border)', marginBottom: 14, width: 'fit-content' }}>
+                {[{ k: 'all', l: 'Tất cả' }, { k: 'pending', l: 'Chờ xử lý' }, { k: 'in_progress', l: 'Đang sơn' }, { k: 'completed', l: 'Hoàn thành' }].map(f => (
+                  <button key={f.k} type="button" className="btn" onClick={() => setPaintFilter(f.k)}
+                    style={{ fontSize: 12, border: 'none', padding: '5px 12px', background: paintFilter === f.k ? 'var(--surface-raised)' : 'transparent', color: paintFilter === f.k ? 'var(--text)' : 'var(--text-muted)', fontWeight: paintFilter === f.k ? 600 : 400 }}>
+                    {f.l}
+                  </button>
+                ))}
+              </div>
+              <PaintOrdersTable orders={paintFilter === 'all' ? paintOrders : paintOrders.filter(o => o.status === paintFilter)} onRefresh={loadAll} />
+            </div>
+          )}
+
           {tab === 'staff' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {staff.map(s => (
-                <div key={s.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 14, flexWrap: 'wrap' }}>
+                <div key={s.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 160 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 600 }}>{s.full_name}</span>
+                      {s.team_group && (
+                        <span style={{ fontSize: 11, fontWeight: 600, background: 'var(--blue-soft)', color: 'var(--blue)', border: '1px solid var(--blue)', borderRadius: 999, padding: '2px 8px' }}>
+                          {s.team_group}
+                        </span>
+                      )}
                       {!s.approved && (
                         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--red)', border: '1px solid var(--red)', borderRadius: 999, padding: '2px 8px', textTransform: 'uppercase' }}>
                           Chờ duyệt
@@ -233,6 +274,15 @@ export default function ManagementDashboard() {
                       )}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{s.phone || 'Chưa có số điện thoại'}</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tổ đội</span>
+                    <input
+                      value={s.team_group || ''}
+                      onChange={e => changeTeamGroup(s.id, e.target.value || null)}
+                      placeholder="VD: Tổ sơn, Tổ gò..."
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 10px', color: 'var(--text)', fontSize: 13, width: 160 }}
+                    />
                   </div>
                   <select value={s.role} onChange={e => changeRole(s.id, e.target.value)} style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', color: 'var(--text)' }}>
                     {Object.entries(ROLES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
