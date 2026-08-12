@@ -5,17 +5,20 @@ import PaintOrdersTable from '../components/PaintOrdersTable'
 export default function PaintTeamDashboard() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [filter, setFilter] = useState('active') // 'active' | 'completed' | 'all'
 
   async function loadOrders() {
     setLoading(true)
+    setLoadError('')
     let query = supabase
       .from('paint_orders')
       .select('*, creator:created_by(full_name), handler:assigned_to(full_name)')
       .order('created_at', { ascending: false })
     if (filter === 'active') query = query.in('status', ['pending', 'in_progress'])
     if (filter === 'completed') query = query.eq('status', 'completed')
-    const { data } = await query
+    const { data, error } = await query
+    if (error) setLoadError(`Không thể tải đơn sơn: ${error.message}`)
     setOrders(data || [])
     setLoading(false)
   }
@@ -72,10 +75,13 @@ export default function PaintTeamDashboard() {
 
       {loading ? (
         <p style={{ color: 'var(--text-muted)' }}>Đang tải…</p>
+      ) : loadError ? (
+        <div className="card" style={{ color: 'var(--red)', padding: '16px 18px' }}>
+          {loadError}
+        </div>
       ) : (
         <PaintOrdersTable orders={orders} onRefresh={loadOrders} />
       )}
     </div>
   )
 }
-

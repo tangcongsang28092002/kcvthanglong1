@@ -299,6 +299,20 @@ h1, h2, h3 {
 .paint-order-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .paint-order-actions > :last-child { margin-left: auto; }
 
+/* Kept after the desktop defaults so these rules win in the cascade. */
+@media (max-width: 768px) {
+  .paint-order-table-wrap { display: none; }
+  .paint-order-cards { display: flex; flex-direction: column; gap: 12px; }
+  .paint-order-card { padding: 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-raised); }
+  .paint-order-card-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; }
+  .paint-order-fields { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .paint-order-fields label { display: flex; flex-direction: column; gap: 5px; color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .paint-order-fields input { width: 100%; padding: 10px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 14px; text-transform: none; letter-spacing: normal; }
+  .paint-order-actions { align-items: stretch; flex-direction: column; }
+  .paint-order-actions > :last-child { margin-left: 0; }
+  .paint-order-actions .btn { width: 100%; }
+}
+
 .error-text { color: var(--red); font-size: 13px; }
 
 /* Status badge */
