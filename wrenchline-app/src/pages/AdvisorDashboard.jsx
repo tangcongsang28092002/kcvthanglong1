@@ -69,7 +69,13 @@ export default function AdvisorDashboard() {
     setPaintOrders(data || [])
   }
 
-  useEffect(() => { loadPaintOrders() }, [])
+  useEffect(() => {
+    loadPaintOrders()
+    const channel = supabase.channel('advisor-live-paint-orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'paint_orders' }, loadPaintOrders)
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [])
 
   const filteredPaint = paintFilter === 'all' ? paintOrders : paintOrders.filter(o => o.status === paintFilter)
 

@@ -49,7 +49,14 @@ export default function ManagementDashboard() {
     setLoading(false)
   }
 
-  useEffect(() => { loadAll() }, [])
+  useEffect(() => {
+    loadAll()
+    const channel = supabase.channel('management-live-data')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'paint_orders' }, loadAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, loadAll)
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [])
 
   const tasksByVehicle = useMemo(() => {
     const grouped = {}

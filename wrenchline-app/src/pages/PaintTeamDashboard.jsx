@@ -23,7 +23,13 @@ export default function PaintTeamDashboard() {
     setLoading(false)
   }
 
-  useEffect(() => { loadOrders() }, [filter])
+  useEffect(() => {
+    loadOrders()
+    const channel = supabase.channel('paint-team-paint-orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'paint_orders' }, loadOrders)
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [filter])
 
   const pending = orders.filter(o => o.status === 'pending').length
   const inProgress = orders.filter(o => o.status === 'in_progress').length
@@ -80,7 +86,7 @@ export default function PaintTeamDashboard() {
           {loadError}
         </div>
       ) : (
-        <PaintOrdersTable orders={orders} onRefresh={loadOrders} />
+        <PaintOrdersTable orders={orders} onRefresh={loadOrders} showCurrentUserLabel />
       )}
     </div>
   )

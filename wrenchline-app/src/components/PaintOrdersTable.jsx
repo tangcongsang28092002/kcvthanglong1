@@ -12,7 +12,7 @@ const editableFields = [
   ['mo_ta', 'Mô tả'],
 ]
 
-export default function PaintOrdersTable({ orders = [], onRefresh }) {
+export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUserLabel = false }) {
   const { profile } = useAuth()
   const [processingId, setProcessingId] = useState(null)
   const [editingOrder, setEditingOrder] = useState(null)
@@ -195,7 +195,7 @@ export default function PaintOrdersTable({ orders = [], onRefresh }) {
                         display: 'inline-block',
                         whiteSpace: 'nowrap',
                       }}>
-                        👤 {handlerName} {isMyOrder && '(Bạn)'}
+                        👤 {handlerName} {showCurrentUserLabel && isMyOrder && '(Bạn)'}
                       </span>
                     ) : (
                       <span style={{ fontSize: 12, color: 'var(--text-dim)', fontStyle: 'italic' }}>
@@ -397,7 +397,7 @@ export default function PaintOrdersTable({ orders = [], onRefresh }) {
                     borderRadius: 6,
                     whiteSpace: 'nowrap',
                   }}>
-                    👤 {handlerName}
+                    👤 {handlerName} {showCurrentUserLabel && isMyOrder && '(Bạn)'}
                   </span>
                 )}
               </div>

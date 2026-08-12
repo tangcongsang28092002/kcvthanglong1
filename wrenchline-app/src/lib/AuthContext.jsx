@@ -36,6 +36,16 @@ export function AuthProvider({ children }) {
     if (profile !== null) setLoading(false)
   }, [profile])
 
+  useEffect(() => {
+    if (!session?.user?.id) return undefined
+    const channel = supabase.channel(`profile-${session.user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${session.user.id}` }, payload => {
+        if (payload.new) setProfile(payload.new)
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [session?.user?.id])
+
   const value = {
     session,
     user: session?.user ?? null,
