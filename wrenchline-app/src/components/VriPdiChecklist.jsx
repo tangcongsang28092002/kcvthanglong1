@@ -236,7 +236,7 @@ export default function VriPdiChecklist({ vehicle, onClose }) {
           </div>
 
           {/* Quick Stats Bar */}
-          <div style={{
+          <div className="vri-section-tabs" style={{
             display: 'flex', gap: 16, flexWrap: 'wrap', background: 'var(--bg)', padding: '10px 14px',
             borderRadius: 8, border: '1px solid var(--border)', fontSize: 13, marginBottom: 16,
           }}>
@@ -327,7 +327,7 @@ export default function VriPdiChecklist({ vehicle, onClose }) {
                   key={key}
                   type="button"
                   onClick={() => setActiveTab(key)}
-                  className="btn"
+                  className={`btn vri-section-tab ${isSelected ? 'active' : ''}`}
                   style={{
                     fontSize: 12, padding: '6px 12px', borderRadius: 20, whiteSpace: 'nowrap',
                     background: isSelected ? 'var(--accent)' : 'var(--bg)',

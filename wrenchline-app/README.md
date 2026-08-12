@@ -62,6 +62,15 @@ Mở địa chỉ hiển thị trong terminal (thường là `http://localhost:5
 Mặc định Supabase yêu cầu xác nhận email khi đăng ký tài khoản mới. Để test nhanh nội bộ,
 có thể tắt ở Supabase → Authentication → Providers → Email → "Confirm email".
 
+## Thiết lập chức năng xóa nhân sự
+
+Nút **Xóa** trong mục **Nhân sự & vị trí** gọi hàm `admin_delete_user` trên
+Supabase. Trước khi triển khai phiên bản có nút này, hãy mở **Supabase → SQL
+Editor** và chạy nội dung của
+`supabase/migrations/20260812110000_add_admin_delete_user.sql`. Hàm này chỉ
+cho phép tài khoản có vai trò `admin` xóa một tài khoản khác; tài khoản đăng
+nhập và hồ sơ nhân sự tương ứng đều được xóa.
+
 ## Ghi chú
 
 - Row-level security thực thi ai được ghi gì (cố vấn tạo phiếu, quản lý/tổ trưởng phân

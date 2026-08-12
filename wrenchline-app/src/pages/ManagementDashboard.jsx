@@ -32,6 +32,7 @@ export default function ManagementDashboard() {
   const [taskForm, setTaskForm] = useState({ vehicle_id: '', assigned_to: '', description: '' })
   const [taskError, setTaskError] = useState('')
   const [savingTask, setSavingTask] = useState(false)
+  const [deletingUserId, setDeletingUserId] = useState(null)
 
   async function loadAll() {
     setLoading(true)
@@ -122,9 +123,11 @@ export default function ManagementDashboard() {
     const confirmed = window.confirm(`⚠️ Bạn có chắc muốn XÓA nhân sự "${userName}" không?\nHành động này không thể hoàn tác!`)
     if (!confirmed) return
 
+    setDeletingUserId(userId)
     const { error } = await supabase.rpc('admin_delete_user', {
       target_user_id: userId
     })
+    setDeletingUserId(null)
 
     if (error) {
       alert(`Lỗi xóa tài khoản: ${error.message}`)
@@ -167,7 +170,7 @@ export default function ManagementDashboard() {
       {loading ? <p style={{ color: 'var(--text-muted)' }}>Đang tải…</p> : (
         <>
           {tab === 'create' && (
-            <div style={{ maxWidth: 640 }}>
+            <div style={{ maxWidth: 1120 }}>
               <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>Lên phiếu tiếp nhận xe, khai báo hạng mục sửa chữa, phụ tùng đi kèm và phân công tổ kỹ thuật viên phụ trách.</p>
               <RepairTicketForm onCreated={() => { loadAll(); setTab('vehicles') }} />
             </div>
@@ -337,8 +340,8 @@ export default function ManagementDashboard() {
                     Đổi mật khẩu
                   </button>
                   {s.id !== profile.id && (
-                    <button className="btn" onClick={() => deleteUser(s.id, s.full_name)} style={{ background: 'transparent', border: '1px solid var(--red)', color: 'var(--red)', whiteSpace: 'nowrap' }}>
-                      🗑 Xóa
+                    <button className="btn" onClick={() => deleteUser(s.id, s.full_name)} disabled={deletingUserId === s.id} style={{ background: 'transparent', border: '1px solid var(--red)', color: 'var(--red)', whiteSpace: 'nowrap' }}>
+                      {deletingUserId === s.id ? 'Đang xóa…' : '🗑 Xóa'}
                     </button>
                   )}
                 </div>

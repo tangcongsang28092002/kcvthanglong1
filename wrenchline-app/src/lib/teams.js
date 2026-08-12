@@ -1,19 +1,23 @@
-// Preset technical team names for the workshop. Stored as free text on
-// tasks.team (with a <datalist> combobox) so an advisor/manager can either
-// pick a common team or type a custom one without a schema change.
 export const REPAIR_TEAMS = [
-  'Tổ Gò',
- 
-  'Tổ Sơn',
-
-  
-  
- 
+  'Tổ kỹ thuật viên',
+  'Tổ sơn',
+  'Tổ gò',
+  'Gia công',
 ]
+
+export function teamFromWorkCode(workCode) {
+  const prefix = String(workCode || '').trim().slice(0, 2)
+  if (prefix === '01' || prefix === '02') return 'Tổ kỹ thuật viên'
+  if (prefix === '03') return 'Tổ sơn'
+  if (prefix === '04') return 'Tổ gò'
+  if (prefix === '05') return 'Gia công'
+  return ''
+}
 
 export function emptyRepairItem() {
   return {
     key: crypto.randomUUID(),
+    work_code: '',
     description: '',
     parts_needed: '',
     parts_complete: true,
@@ -24,10 +28,9 @@ export function emptyRepairItem() {
 }
 
 export function formatTimeRangeVN(start, end) {
-  const fmt = (v) => {
-    if (!v) return null
-    const d = new Date(v)
-    return d.toLocaleString('vi-VN', {
+  const fmt = (value) => {
+    if (!value) return null
+    return new Date(value).toLocaleString('vi-VN', {
       timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
     })
   }
