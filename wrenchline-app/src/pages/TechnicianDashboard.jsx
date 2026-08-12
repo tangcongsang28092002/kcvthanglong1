@@ -12,18 +12,31 @@ export default function TechnicianDashboard() {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
 
-  async function loadTasks() {
-    setLoading(true)
+  async function loadTasks({ silent = false } = {}) {
+    if (!silent) setLoading(true)
     const { data } = await supabase
       .from('tasks')
       .select('*, vehicles(license_plate, customer_name, scope_of_repair, status)')
       .eq('assigned_to', profile.id)
       .order('created_at', { ascending: false })
     setTasks(data || [])
-    setLoading(false)
+    if (!silent) setLoading(false)
   }
 
-  useEffect(() => { loadTasks() }, [profile.id])
+  useEffect(() => {
+    loadTasks()
+    const channel = supabase.channel(`technician-live-data-${profile.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => loadTasks({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, () => loadTasks({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadTasks({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'status_updates' }, () => loadTasks({ silent: true }))
+      .subscribe()
+    const refreshTimer = window.setInterval(() => loadTasks({ silent: true }), 5000)
+    return () => {
+      window.clearInterval(refreshTimer)
+      supabase.removeChannel(channel)
+    }
+  }, [profile.id])
 
   async function updateTaskStatus(task, status) {
     await supabase.from('tasks').update({ status }).eq('id', task.id)

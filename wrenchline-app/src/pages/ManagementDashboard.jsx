@@ -34,8 +34,8 @@ export default function ManagementDashboard() {
   const [savingTask, setSavingTask] = useState(false)
   const [deletingUserId, setDeletingUserId] = useState(null)
 
-  async function loadAll() {
-    setLoading(true)
+  async function loadAll({ silent = false } = {}) {
+    if (!silent) setLoading(true)
     const [{ data: v }, { data: p }, { data: t }, { data: po }] = await Promise.all([
       supabase.from('vehicles').select('*').order('created_at', { ascending: false }),
       supabase.from('profiles').select('*').order('full_name'),
@@ -46,16 +46,24 @@ export default function ManagementDashboard() {
     setStaff(p || [])
     setTasks(t || [])
     setPaintOrders(po || [])
-    setLoading(false)
+    if (!silent) setLoading(false)
   }
 
   useEffect(() => {
     loadAll()
     const channel = supabase.channel('management-live-data')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'paint_orders' }, loadAll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, loadAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, () => loadAll({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => loadAll({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'paint_orders' }, () => loadAll({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadAll({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'status_updates' }, () => loadAll({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'quality_inspections' }, () => loadAll({ silent: true }))
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    const refreshTimer = window.setInterval(() => loadAll({ silent: true }), 5000)
+    return () => {
+      window.clearInterval(refreshTimer)
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const tasksByVehicle = useMemo(() => {

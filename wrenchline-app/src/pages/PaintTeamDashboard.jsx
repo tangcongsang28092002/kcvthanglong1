@@ -8,8 +8,8 @@ export default function PaintTeamDashboard() {
   const [loadError, setLoadError] = useState('')
   const [filter, setFilter] = useState('active') // 'active' | 'completed' | 'all'
 
-  async function loadOrders() {
-    setLoading(true)
+  async function loadOrders({ silent = false } = {}) {
+    if (!silent) setLoading(true)
     setLoadError('')
     let query = supabase
       .from('paint_orders')
@@ -20,15 +20,22 @@ export default function PaintTeamDashboard() {
     const { data, error } = await query
     if (error) setLoadError(`Không thể tải đơn sơn: ${error.message}`)
     setOrders(data || [])
-    setLoading(false)
+    if (!silent) setLoading(false)
   }
 
   useEffect(() => {
     loadOrders()
     const channel = supabase.channel('paint-team-paint-orders')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'paint_orders' }, loadOrders)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'paint_orders' }, () => loadOrders({ silent: true }))
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+
+    // Fallback polling keeps multiple devices in sync when the Supabase
+    // realtime publication has not yet been enabled on the project.
+    const refreshTimer = window.setInterval(() => loadOrders({ silent: true }), 3000)
+    return () => {
+      window.clearInterval(refreshTimer)
+      supabase.removeChannel(channel)
+    }
   }, [filter])
 
   const pending = orders.filter(o => o.status === 'pending').length

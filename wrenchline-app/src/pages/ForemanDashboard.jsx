@@ -14,8 +14,8 @@ export default function ForemanDashboard() {
   const [loading, setLoading] = useState(true)
   const [inspection, setInspection] = useState({}) // vehicleId -> {passed, notes}
 
-  async function loadAll() {
-    setLoading(true)
+  async function loadAll({ silent = false } = {}) {
+    if (!silent) setLoading(true)
     const { data: v } = await supabase
       .from('vehicles').select('*').eq('foreman_id', profile.id)
       .order('created_at', { ascending: false })
@@ -32,11 +32,27 @@ export default function ForemanDashboard() {
         grouped[task.vehicle_id].push(task)
       }
       setTasksByVehicle(grouped)
+    } else {
+      setTasksByVehicle({})
     }
-    setLoading(false)
+    if (!silent) setLoading(false)
   }
 
-  useEffect(() => { loadAll() }, [profile.id])
+  useEffect(() => {
+    loadAll()
+    const channel = supabase.channel(`foreman-live-data-${profile.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, () => loadAll({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => loadAll({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadAll({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'status_updates' }, () => loadAll({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'quality_inspections' }, () => loadAll({ silent: true }))
+      .subscribe()
+    const refreshTimer = window.setInterval(() => loadAll({ silent: true }), 5000)
+    return () => {
+      window.clearInterval(refreshTimer)
+      supabase.removeChannel(channel)
+    }
+  }, [profile.id])
 
   async function updateStatus(vehicleId, status) {
     await supabase.from('vehicles').update({ status }).eq('id', vehicleId)

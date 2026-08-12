@@ -20,8 +20,8 @@ export default function AdvisorDashboard() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
 
-  async function loadVehicles() {
-    setLoading(true)
+  async function loadVehicles({ silent = false } = {}) {
+    if (!silent) setLoading(true)
     const { data: v } = await supabase
       .from('vehicles')
       .select('*')
@@ -43,10 +43,22 @@ export default function AdvisorDashboard() {
     } else {
       setTasksByVehicle({})
     }
-    setLoading(false)
+    if (!silent) setLoading(false)
   }
 
-  useEffect(() => { loadVehicles() }, [])
+  useEffect(() => {
+    loadVehicles()
+    const channel = supabase.channel('advisor-live-vehicles')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, () => loadVehicles({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => loadVehicles({ silent: true }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'status_updates' }, () => loadVehicles({ silent: true }))
+      .subscribe()
+    const refreshTimer = window.setInterval(() => loadVehicles({ silent: true }), 5000)
+    return () => {
+      window.clearInterval(refreshTimer)
+      supabase.removeChannel(channel)
+    }
+  }, [])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -74,7 +86,11 @@ export default function AdvisorDashboard() {
     const channel = supabase.channel('advisor-live-paint-orders')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'paint_orders' }, loadPaintOrders)
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    const refreshTimer = window.setInterval(loadPaintOrders, 5000)
+    return () => {
+      window.clearInterval(refreshTimer)
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const filteredPaint = paintFilter === 'all' ? paintOrders : paintOrders.filter(o => o.status === paintFilter)
