@@ -568,6 +568,21 @@ h1, h2, h3 {
 .record-table tbody tr:last-child td { border-bottom: none; }
 .record-table tbody tr:hover td { background: var(--surface-raised); }
 
+.paint-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }
+.paint-summary-card { padding: 16px; display: flex; flex-direction: column; gap: 5px; }
+.paint-summary-card strong { font: 700 30px var(--font-display); }
+.paint-summary-card span { color: var(--text-muted); font-size: 12px; font-weight: 600; }
+.paint-summary-complete strong { color: var(--green); }
+.paint-summary-progress strong { color: var(--accent); }
+.paint-summary-pending strong { color: var(--blue); }
+
+.paint-order-modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 18px; background: rgba(0, 0, 0, .64); }
+.paint-order-edit-modal { width: min(680px, 100%); max-height: calc(100vh - 36px); overflow-y: auto; padding: 22px; }
+.paint-order-edit-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.paint-order-edit-fields label { display: flex; flex-direction: column; gap: 6px; color: var(--text-muted); font-size: 12px; font-weight: 700; }
+.paint-order-edit-fields input { width: 100%; padding: 10px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+@media (max-width: 600px) { .paint-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .paint-order-edit-fields { grid-template-columns: 1fr; } }
+
 /* Mobile-only cards */
 .record-cards {
   display: none;

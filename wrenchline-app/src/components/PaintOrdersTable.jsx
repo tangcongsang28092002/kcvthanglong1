@@ -3,9 +3,53 @@ import { supabase, formatDateTimeVN } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { notifyPaintCompleted } from '../lib/notifications'
 
+const editableFields = [
+  ['so_thung', 'Số thùng *', true],
+  ['model', 'Model'],
+  ['ten_thung', 'Tên thùng'],
+  ['so_khung', 'Số khung *', true],
+  ['so_khung_gac_tam', 'Số khung gác tạm'],
+  ['mo_ta', 'Mô tả'],
+]
+
 export default function PaintOrdersTable({ orders = [], onRefresh }) {
   const { profile } = useAuth()
   const [processingId, setProcessingId] = useState(null)
+  const [editingOrder, setEditingOrder] = useState(null)
+  const [editValues, setEditValues] = useState({})
+  const [editError, setEditError] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
+
+  function openEdit(order) {
+    setEditingOrder(order)
+    setEditValues(Object.fromEntries(editableFields.map(([field]) => [field, order[field] || ''])))
+    setEditError('')
+  }
+
+  async function saveEdit(event) {
+    event.preventDefault()
+    if (!editingOrder || !editValues.so_thung.trim() || !editValues.so_khung.trim()) {
+      setEditError('Số thùng và Số khung là bắt buộc.')
+      return
+    }
+
+    setSavingEdit(true)
+    const changes = Object.fromEntries(editableFields.map(([field]) => [field, editValues[field].trim() || null]))
+    const { error } = await supabase.from('paint_orders').update(changes).eq('id', editingOrder.id)
+    setSavingEdit(false)
+    if (error) { setEditError(error.message); return }
+    setEditingOrder(null)
+    onRefresh?.()
+  }
+
+  async function deleteOrder(order) {
+    if (!window.confirm(`Xóa đơn sơn ${order.so_thung || order.so_khung}? Thao tác này không thể hoàn tác.`)) return
+    setProcessingId(order.id)
+    const { error } = await supabase.from('paint_orders').delete().eq('id', order.id)
+    setProcessingId(null)
+    if (error) { alert(`Lỗi khi xóa đơn: ${error.message}`); return }
+    onRefresh?.()
+  }
 
   async function handleStart(order) {
     if (order.status !== 'pending') return
@@ -97,6 +141,7 @@ export default function PaintOrdersTable({ orders = [], onRefresh }) {
               <th style={{ minWidth: 120 }}>Chờ xử lý</th>
               <th style={{ minWidth: 140 }}>Đang sơn</th>
               <th style={{ minWidth: 140 }}>Hoàn thành</th>
+              {profile?.role === 'admin' && <th style={{ minWidth: 132 }}>Quản lý</th>}
             </tr>
           </thead>
           <tbody>
@@ -305,6 +350,14 @@ export default function PaintOrdersTable({ orders = [], onRefresh }) {
                       </span>
                     )}
                   </td>
+                  {profile?.role === 'admin' && (
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button type="button" className="btn btn-ghost" onClick={() => openEdit(order)} style={{ fontSize: 12, padding: '6px 10px' }}>Sửa</button>
+                        <button type="button" className="btn" disabled={isBusy} onClick={() => deleteOrder(order)} style={{ fontSize: 12, padding: '6px 10px', color: 'var(--red)', borderColor: 'var(--red)' }}>Xóa</button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               )
             })}
@@ -462,10 +515,36 @@ export default function PaintOrdersTable({ orders = [], onRefresh }) {
                   )}
                 </div>
               </div>
+
+              {profile?.role === 'admin' && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <button type="button" className="btn btn-ghost" onClick={() => openEdit(order)} style={{ flex: 1, fontSize: 12 }}>Sửa đơn</button>
+                  <button type="button" className="btn" disabled={isBusy} onClick={() => deleteOrder(order)} style={{ flex: 1, fontSize: 12, color: 'var(--red)', borderColor: 'var(--red)' }}>Xóa đơn</button>
+                </div>
+              )}
             </div>
           )
         })}
       </div>
+      {editingOrder && (
+        <div className="paint-order-modal-backdrop" role="presentation" onMouseDown={() => setEditingOrder(null)}>
+          <form className="card paint-order-edit-modal" onSubmit={saveEdit} onMouseDown={event => event.stopPropagation()}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 20 }}>Sửa đơn sơn</h3>
+            <div className="paint-order-edit-fields">
+              {editableFields.map(([field, label, required]) => (
+                <label key={field}>{label}
+                  <input required={required} value={editValues[field] || ''} onChange={event => setEditValues(values => ({ ...values, [field]: event.target.value }))} />
+                </label>
+              ))}
+            </div>
+            {editError && <p className="error-text" style={{ margin: '12px 0 0' }}>{editError}</p>}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+              <button type="button" className="btn btn-ghost" onClick={() => setEditingOrder(null)}>Hủy</button>
+              <button className="btn btn-accent" disabled={savingEdit}>{savingEdit ? 'Đang lưu…' : 'Lưu thay đổi'}</button>
+            </div>
+          </form>
+        </div>
+      )}
     </>
   )
 }

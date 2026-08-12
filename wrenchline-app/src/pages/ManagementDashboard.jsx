@@ -277,6 +277,19 @@ export default function ManagementDashboard() {
 
           {tab === 'paint' && (
             <div>
+              <div className="paint-summary-grid">
+                {[
+                  { label: 'Tổng đơn đã lên', value: paintOrders.length, tone: 'default' },
+                  { label: 'Đã hoàn thành', value: paintOrders.filter(order => order.status === 'completed').length, tone: 'complete' },
+                  { label: 'Đang sơn', value: paintOrders.filter(order => order.status === 'in_progress').length, tone: 'progress' },
+                  { label: 'Chờ xử lý', value: paintOrders.filter(order => order.status === 'pending').length, tone: 'pending' },
+                ].map(item => (
+                  <div className={`card paint-summary-card paint-summary-${item.tone}`} key={item.label}>
+                    <strong>{item.value}</strong>
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
               <h3 style={{ fontSize: 18, marginBottom: 8 }}>Lên đơn Sơn xe mới</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>
                 Tạo đơn sơn xe mới. Sau khi tạo, đơn sẽ tự động chuyển cho <strong style={{ color: 'var(--accent)' }}>Tổ sơn</strong>.
