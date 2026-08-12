@@ -93,6 +93,27 @@ export default function ManagementDashboard() {
     loadAll()
   }
 
+  async function resetPassword(userId, userName) {
+    const newPassword = window.prompt(`Nhập mật khẩu mới cho nhân sự ${userName}:`)
+    if (!newPassword) return
+
+    if (newPassword.length < 6) {
+      alert('Mật khẩu phải có ít nhất 6 ký tự.')
+      return
+    }
+
+    const { error } = await supabase.rpc('admin_reset_password', {
+      target_user_id: userId,
+      new_password: newPassword
+    })
+
+    if (error) {
+      alert(`Lỗi đổi mật khẩu: ${error.message}`)
+    } else {
+      alert(`Đã đổi mật khẩu thành công cho ${userName}!`)
+    }
+  }
+
   async function createTask(e) {
     e.preventDefault()
     setTaskError('')
@@ -292,6 +313,9 @@ export default function ManagementDashboard() {
                   ) : (
                     <button className="btn btn-accent" onClick={() => toggleApproved(s.id, true)}>Xác nhận</button>
                   )}
+                  <button className="btn" onClick={() => resetPassword(s.id, s.full_name)} style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+                    Đổi mật khẩu
+                  </button>
                 </div>
               ))}
             </div>
