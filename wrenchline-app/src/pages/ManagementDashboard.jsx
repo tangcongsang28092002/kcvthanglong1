@@ -114,6 +114,26 @@ export default function ManagementDashboard() {
     }
   }
 
+  async function deleteUser(userId, userName) {
+    if (userId === profile.id) {
+      alert('Bạn không thể xóa chính tài khoản của mình!')
+      return
+    }
+    const confirmed = window.confirm(`⚠️ Bạn có chắc muốn XÓA nhân sự "${userName}" không?\nHành động này không thể hoàn tác!`)
+    if (!confirmed) return
+
+    const { error } = await supabase.rpc('admin_delete_user', {
+      target_user_id: userId
+    })
+
+    if (error) {
+      alert(`Lỗi xóa tài khoản: ${error.message}`)
+    } else {
+      alert(`Đã xóa tài khoản ${userName} thành công.`)
+      loadAll()
+    }
+  }
+
   async function createTask(e) {
     e.preventDefault()
     setTaskError('')
@@ -316,6 +336,11 @@ export default function ManagementDashboard() {
                   <button className="btn" onClick={() => resetPassword(s.id, s.full_name)} style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', color: 'var(--text)', whiteSpace: 'nowrap' }}>
                     Đổi mật khẩu
                   </button>
+                  {s.id !== profile.id && (
+                    <button className="btn" onClick={() => deleteUser(s.id, s.full_name)} style={{ background: 'transparent', border: '1px solid var(--red)', color: 'var(--red)', whiteSpace: 'nowrap' }}>
+                      🗑 Xóa
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
