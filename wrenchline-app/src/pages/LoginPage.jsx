@@ -92,22 +92,22 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit}>
             {mode === 'signup' && (
               <div className="field">
-                <label>Họ và tên</label>
-                <input value={fullName} onChange={e => setFullName(e.target.value)} required placeholder="Nguyễn Văn A" />
+                <label htmlFor="full_name">Họ và tên</label>
+                <input id="full_name" name="full_name" autoComplete="name" value={fullName} onChange={e => setFullName(e.target.value)} required placeholder="Nguyễn Văn A" />
               </div>
             )}
             <div className="field">
-              <label>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="ban@xuong.com" />
+              <label htmlFor="email">Email</label>
+              <input id="email" name="email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="ban@xuong.com" />
             </div>
             <div className="field">
-              <label>Mật khẩu</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} placeholder="••••••••" />
+              <label htmlFor="password">Mật khẩu</label>
+              <input id="password" name="password" type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} required minLength={6} placeholder="••••••••" />
             </div>
             {mode === 'signup' && (
               <div className="field">
-                <label>Vị trí công việc</label>
-                <select value={role} onChange={e => setRole(e.target.value)}>
+                <label htmlFor="role">Vị trí công việc</label>
+                <select id="role" name="role" value={role} onChange={e => setRole(e.target.value)}>
                   {SIGNUP_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
               </div>
@@ -125,3 +125,4 @@ export default function LoginPage() {
     </div>
   )
 }
+
