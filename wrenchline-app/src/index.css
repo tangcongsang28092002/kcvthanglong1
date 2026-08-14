@@ -582,7 +582,88 @@ h1, h2, h3 {
 .paint-order-edit-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .paint-order-edit-fields label { display: flex; flex-direction: column; gap: 6px; color: var(--text-muted); font-size: 12px; font-weight: 700; }
 .paint-order-edit-fields input, .paint-order-edit-fields select { width: 100%; padding: 10px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
-.paint-orders-record-table { min-width: 1500px; }
+/* Fixed layout + wrapping cells: the table always fits the available
+   width (never forces a min-width), so no horizontal scrollbar appears.
+   Columns are sized by percentage via <colgroup>, and cell text wraps
+   or truncates instead of pushing the table wider than the screen. */
+.paint-orders-record-table { table-layout: fixed; width: 100%; }
+.paint-orders-record-table th, .paint-orders-record-table td { white-space: normal; word-break: break-word; vertical-align: top; }
+.paint-orders-record-table th { vertical-align: middle; }
+.paint-orders-record-table td { color: var(--text); font-size: 13px; }
+.paint-desc-cell {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.paint-order-list-tools { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.paint-order-list-tools input { flex: 1; min-width: 240px; padding: 10px 12px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+.paint-order-list-tools span { color: var(--text-muted); font-size: 12px; font-weight: 700; white-space: nowrap; }
+
+/* Excel-style AutoFilter: a funnel button in each header cell opens a
+   checklist popover of the column's distinct values. */
+.col-filter { position: relative; display: inline-block; margin-left: 4px; }
+.col-filter-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.col-filter-btn:hover { color: var(--text); background: var(--surface); }
+.col-filter-btn-active { color: var(--accent); font-weight: 700; }
+.col-filter-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  width: 220px;
+  max-height: 280px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.45);
+  padding: 8px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+}
+.col-filter-search {
+  width: 100%;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  font-size: 12px;
+}
+.col-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 5px;
+}
+.col-filter-option:hover { background: var(--surface); }
+.col-filter-option span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-filter-option-all { border-bottom: 1px solid var(--border-soft); padding-bottom: 6px; margin-bottom: 4px; font-weight: 600; }
+.col-filter-list { overflow-y: auto; flex: 1; }
+.col-filter-empty { color: var(--text-muted); font-size: 12px; padding: 6px 4px; }
+.col-filter-clear { margin-top: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); border-radius: 6px; padding: 6px; font-size: 12px; cursor: pointer; }
+.col-filter-clear:hover { color: var(--text); border-color: var(--text-dim); }
+.paint-date-highlight { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 7px; background: var(--accent-soft); color: var(--accent); font-family: var(--font-mono); font-weight: 800; white-space: nowrap; }
+.paint-frame-highlight { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 7px; background: rgba(255,255,255,.08); color: var(--text); border: 1px solid var(--accent); font-family: var(--font-mono); font-size: 12px; font-weight: 800; letter-spacing: .04em; white-space: nowrap; }
 @media (max-width: 600px) { .paint-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .paint-order-edit-fields { grid-template-columns: 1fr; } }
 
 /* Mobile-only cards */

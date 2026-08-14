@@ -57,7 +57,8 @@ function Gate() {
     <Layout>
       {profile?.role === 'admin' && <ManagementDashboard />}
       {profile?.role === 'service_advisor' && <AdvisorDashboard />}
-      {isPaintTeamMember(profile) && profile?.role !== 'admin' && profile?.role !== 'service_advisor' && <PaintTeamDashboard />}
+      {profile?.role === 'paint_customer' && <PaintTeamDashboard />}
+      {isPaintTeamMember(profile) && profile?.role !== 'admin' && profile?.role !== 'service_advisor' && profile?.role !== 'paint_customer' && <PaintTeamDashboard />}
       {profile?.role === 'foreman' && profile?.team_group && !isPaintTeamMember(profile) && <ForemanDashboard />}
       {profile?.role === 'technician' && profile?.team_group && !isPaintTeamMember(profile) && <TechnicianDashboard />}
       {profile?.role === 'foreman' && !profile?.team_group && <ForemanDashboard />}

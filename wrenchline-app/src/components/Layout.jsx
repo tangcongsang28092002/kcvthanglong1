@@ -11,6 +11,8 @@ const NAV_ITEMS = [
 
 export default function Layout({ children }) {
   const { profile, signOut } = useAuth()
+  const isPaintCustomer = profile?.role === 'paint_customer'
+  const navItems = isPaintCustomer ? [{ key: 'workshop', icon: '🎨', label: 'View sơn xe', hint: 'Theo dõi đơn sơn' }] : NAV_ITEMS
   const [activeTab, setActiveTab] = useState('workshop')
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -31,7 +33,7 @@ export default function Layout({ children }) {
 
         <nav className="app-nav" aria-label="Điều hướng chính">
           <p className="app-nav-label">Điều hướng</p>
-          {NAV_ITEMS.map(item => <button key={item.key} type="button" className={`app-nav-item ${activeTab === item.key ? 'active' : ''}`} onClick={() => navigate(item.key)} title={item.label}>
+          {navItems.map(item => <button key={item.key} type="button" className={`app-nav-item ${activeTab === item.key ? 'active' : ''}`} onClick={() => navigate(item.key)} title={item.label}>
             <span className="app-nav-icon">{item.icon}</span>
             <span className="app-nav-copy"><strong>{item.label}</strong><small>{item.hint}</small></span>
           </button>)}
@@ -48,11 +50,11 @@ export default function Layout({ children }) {
       <div className="app-content">
         <header className="app-topbar no-print">
           <button type="button" className="mobile-menu-button" onClick={() => setMobileOpen(true)} aria-label="Mở menu">☰</button>
-          <div><p className="topbar-kicker">{activeTab === 'workshop' ? 'ĐIỀU HÀNH VẬN HÀNH' : 'KIỂM TRA CHẤT LƯỢNG'}</p><h1>{activeTab === 'workshop' ? 'Xưởng dịch vụ' : 'Phiếu VRI / PDI'}</h1></div>
+          <div><p className="topbar-kicker">{isPaintCustomer ? 'THEO DÕI SƠN XE' : activeTab === 'workshop' ? 'ĐIỀU HÀNH VẬN HÀNH' : 'KIỂM TRA CHẤT LƯỢNG'}</p><h1>{isPaintCustomer ? 'View sơn xe' : activeTab === 'workshop' ? 'Xưởng dịch vụ' : 'Phiếu VRI / PDI'}</h1></div>
           <div className="topbar-actions"><span className="live-dot">Trực tuyến</span><button type="button" className="btn btn-ghost topbar-signout" onClick={signOut}>Đăng xuất</button></div>
         </header>
         <main className="app-main">
-          {activeTab === 'vri_pdi' ? <VriPdiChecklist onClose={() => navigate('workshop')} /> : children}
+          {!isPaintCustomer && activeTab === 'vri_pdi' ? <VriPdiChecklist onClose={() => navigate('workshop')} /> : children}
         </main>
       </div>
       <PaintNotificationToast />

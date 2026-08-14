@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import { PAINT_STATUS_LABELS, supabase } from '../lib/supabase'
 import PaintOrdersTable from '../components/PaintOrdersTable'
+import { useAuth } from '../lib/AuthContext'
 
 export default function PaintTeamDashboard() {
+  const { profile } = useAuth()
+  const isPaintCustomer = profile?.role === 'paint_customer'
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
-  const [filter, setFilter] = useState('active') // 'active' | 'completed' | 'all'
+  const [filter, setFilter] = useState(isPaintCustomer ? 'all' : 'active') // 'active' | 'completed' | 'all'
 
   async function loadOrders({ silent = false } = {}) {
     if (!silent) setLoading(true)
@@ -47,7 +50,7 @@ export default function PaintTeamDashboard() {
         <div>
           <h2 style={{ fontSize: 22, marginBottom: 4 }}>Đơn sơn xe</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>
-            Danh sách đơn sơn xe được phân công cho Tổ sơn. Cập nhật trạng thái theo tiến độ thực tế của từng đơn.
+            {isPaintCustomer ? 'Theo dõi tiến độ các đơn sơn xe đang được xử lý tại xưởng.' : 'Danh sách đơn sơn xe được phân công cho Tổ sơn. Cập nhật trạng thái theo tiến độ thực tế của từng đơn.'}
           </p>
         </div>
 

@@ -11,6 +11,7 @@ export const ROLES = {
   foreman: 'Tổ trưởng',
   technician: 'Kỹ thuật viên',
   paint_team: 'Tổ sơn',
+  paint_customer: 'Khách hàng Sơn',
 }
 
 export const PAINT_ORDER_STATUSES = ['waiting', 'polishing', 'painting', 'done']

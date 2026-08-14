@@ -5,6 +5,7 @@ const SIGNUP_ROLES = [
   { value: 'service_advisor', label: 'Cố vấn dịch vụ' },
   { value: 'foreman', label: 'Tổ trưởng' },
   { value: 'technician', label: 'Kỹ thuật viên' },
+  { value: 'paint_customer', label: 'Khách hàng Sơn' },
   { value: 'admin', label: 'Quản lý' },
 ]
 
