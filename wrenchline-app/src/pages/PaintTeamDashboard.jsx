@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { PAINT_STATUS_LABELS, supabase } from '../lib/supabase'
 import PaintOrdersTable from '../components/PaintOrdersTable'
 
 export default function PaintTeamDashboard() {
@@ -15,8 +15,8 @@ export default function PaintTeamDashboard() {
       .from('paint_orders')
       .select('*, creator:created_by(full_name), handler:assigned_to(full_name)')
       .order('created_at', { ascending: false })
-    if (filter === 'active') query = query.in('status', ['pending', 'in_progress'])
-    if (filter === 'completed') query = query.eq('status', 'completed')
+    if (filter === 'active') query = query.in('status', ['waiting', 'polishing', 'painting'])
+    if (filter === 'completed') query = query.eq('status', 'done')
     const { data, error } = await query
     if (error) setLoadError(`Không thể tải đơn sơn: ${error.message}`)
     setOrders(data || [])
@@ -38,8 +38,8 @@ export default function PaintTeamDashboard() {
     }
   }, [filter])
 
-  const pending = orders.filter(o => o.status === 'pending').length
-  const inProgress = orders.filter(o => o.status === 'in_progress').length
+  const waiting = orders.filter(o => o.status === 'waiting').length
+  const painting = orders.filter(o => o.status === 'painting').length
 
   return (
     <div style={{ padding: '24px 0' }}>
@@ -47,19 +47,19 @@ export default function PaintTeamDashboard() {
         <div>
           <h2 style={{ fontSize: 22, marginBottom: 4 }}>Đơn sơn xe</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>
-            Danh sách đơn sơn xe được phân công cho Tổ sơn. Bấm <strong>▶ Bắt đầu</strong> khi tiến hành sơn, bấm <strong>✓ Xong</strong> khi hoàn thành.
+            Danh sách đơn sơn xe được phân công cho Tổ sơn. Cập nhật trạng thái theo tiến độ thực tế của từng đơn.
           </p>
         </div>
 
         {/* Quick stats */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <div className="card" style={{ padding: '10px 16px', textAlign: 'center', minWidth: 90 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-dim)' }}>{pending}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Chờ xử lý</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-dim)' }}>{waiting}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{PAINT_STATUS_LABELS.waiting}</div>
           </div>
           <div className="card" style={{ padding: '10px 16px', textAlign: 'center', minWidth: 90 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--accent)' }}>{inProgress}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Đang sơn</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--accent)' }}>{painting}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{PAINT_STATUS_LABELS.painting}</div>
           </div>
         </div>
       </div>

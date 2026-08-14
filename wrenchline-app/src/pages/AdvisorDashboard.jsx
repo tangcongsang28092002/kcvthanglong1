@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase, formatDateVN } from '../lib/supabase'
+import { PAINT_ORDER_STATUSES, PAINT_STATUS_LABELS, supabase, formatDateVN } from '../lib/supabase'
 import StatusBadge from '../components/StatusBadge'
 import RepairTicketForm from '../components/RepairTicketForm'
 import RecordFilterBar from '../components/RecordFilterBar'
@@ -189,7 +189,7 @@ export default function AdvisorDashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
             <h3 style={{ fontSize: 18, margin: 0 }}>Danh sách đơn Sơn xe</h3>
             <div style={{ display: 'flex', gap: 4, background: 'var(--bg)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
-              {[{ k: 'all', l: 'Tất cả' }, { k: 'pending', l: 'Chờ xử lý' }, { k: 'in_progress', l: 'Đang sơn' }, { k: 'completed', l: 'Hoàn thành' }].map(f => (
+              {[{ k: 'all', l: 'Tất cả' }, ...PAINT_ORDER_STATUSES.map(status => ({ k: status, l: PAINT_STATUS_LABELS[status] }))].map(f => (
                 <button key={f.k} type="button" className="btn" onClick={() => setPaintFilter(f.k)}
                   style={{ fontSize: 12, border: 'none', padding: '4px 10px', background: paintFilter === f.k ? 'var(--surface-raised)' : 'transparent', color: paintFilter === f.k ? 'var(--text)' : 'var(--text-muted)', fontWeight: paintFilter === f.k ? 600 : 400 }}>
                   {f.l}

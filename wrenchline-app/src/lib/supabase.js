@@ -13,12 +13,28 @@ export const ROLES = {
   paint_team: 'Tổ sơn',
 }
 
-export const PAINT_ORDER_STATUSES = ['pending', 'in_progress', 'completed']
+export const PAINT_ORDER_STATUSES = ['waiting', 'polishing', 'painting', 'done']
 
 export const PAINT_STATUS_LABELS = {
-  pending: 'Chờ xử lý',
-  in_progress: 'Đang sơn',
-  completed: 'Hoàn thành',
+  waiting: 'Đang chờ',
+  polishing: 'Đang đánh bóng',
+  painting: 'Đang sơn',
+  done: 'Xong',
+}
+
+export const PAINT_STATUS_TONES = {
+  waiting: 'received',
+  polishing: 'quality_check',
+  painting: 'in_repair',
+  done: 'completed',
+}
+
+export const PAINT_PRIORITY_OPTIONS = ['do_first', 'do_later', 'sequential']
+
+export const PAINT_PRIORITY_LABELS = {
+  do_first: 'Ưu tiên làm trước',
+  do_later: 'Làm sau ưu tiên',
+  sequential: 'Làm tuần tự',
 }
 
 export const VEHICLE_STATUSES = [

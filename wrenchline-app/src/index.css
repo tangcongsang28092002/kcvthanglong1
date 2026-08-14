@@ -294,7 +294,7 @@ h1, h2, h3 {
 .paint-order-table { width: 100%; min-width: 860px; border-collapse: collapse; font-size: 13px; }
 .paint-order-table th { padding: 8px 10px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; background: var(--surface-raised); border-bottom: 1px solid var(--border); white-space: nowrap; }
 .paint-order-table td { padding: 4px 6px; border-bottom: 1px solid var(--border-soft); }
-.paint-order-table input { width: 100%; min-width: 110px; padding: 7px 8px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; }
+.paint-order-table input, .paint-order-table select { width: 100%; min-width: 110px; padding: 7px 8px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; }
 .paint-order-table td:nth-child(3) input, .paint-order-table td:nth-child(6) input { min-width: 160px; }
 .paint-order-cards { display: none; }
 .paint-order-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -308,7 +308,7 @@ h1, h2, h3 {
   .paint-order-card-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; }
   .paint-order-fields { display: grid; grid-template-columns: 1fr; gap: 10px; }
   .paint-order-fields label { display: flex; flex-direction: column; gap: 5px; color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
-  .paint-order-fields input { width: 100%; padding: 10px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 14px; text-transform: none; letter-spacing: normal; }
+  .paint-order-fields input, .paint-order-fields select { width: 100%; padding: 10px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 14px; text-transform: none; letter-spacing: normal; }
   .paint-order-actions { align-items: stretch; flex-direction: column; }
   .paint-order-actions > :last-child { margin-left: 0; }
   .paint-order-actions .btn { width: 100%; }
@@ -581,7 +581,8 @@ h1, h2, h3 {
 .paint-order-edit-modal { width: min(680px, 100%); max-height: calc(100vh - 36px); overflow-y: auto; padding: 22px; }
 .paint-order-edit-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .paint-order-edit-fields label { display: flex; flex-direction: column; gap: 6px; color: var(--text-muted); font-size: 12px; font-weight: 700; }
-.paint-order-edit-fields input { width: 100%; padding: 10px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+.paint-order-edit-fields input, .paint-order-edit-fields select { width: 100%; padding: 10px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+.paint-orders-record-table { min-width: 1500px; }
 @media (max-width: 600px) { .paint-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .paint-order-edit-fields { grid-template-columns: 1fr; } }
 
 /* Mobile-only cards */
