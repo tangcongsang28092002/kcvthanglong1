@@ -1,18 +1,26 @@
-import { useState } from 'react'
+import { cloneElement, isValidElement, useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { ROLES } from '../lib/supabase'
 import VriPdiChecklist from './VriPdiChecklist'
 import PaintNotificationToast from './PaintNotificationToast'
+import PlanningBoard from './PlanningBoard'
 
 const NAV_ITEMS = [
   { key: 'workshop', icon: '▦', label: 'Điều hành xưởng', hint: 'Xe, phiếu & công việc' },
+  { key: 'plan', icon: '▤', label: 'Bảng kế hoạch', hint: 'Tiến độ xe trong xưởng' },
   { key: 'vri_pdi', icon: '✓', label: 'Phiếu VRI / PDI', hint: 'Kiểm tra chất lượng' },
 ]
 
 export default function Layout({ children }) {
   const { profile, signOut } = useAuth()
   const isPaintCustomer = profile?.role === 'paint_customer'
-  const navItems = isPaintCustomer ? [{ key: 'workshop', icon: '🎨', label: 'View sơn xe', hint: 'Theo dõi đơn sơn' }] : NAV_ITEMS
+  const isPaintWorkspace = isPaintCustomer || profile?.role === 'paint_team' || (profile?.team_group || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').toLowerCase().includes('son')
+  const navItems = isPaintWorkspace
+    ? [
+        { key: 'workshop', icon: '🎨', label: 'View sơn xe', hint: 'Theo dõi đơn sơn' },
+        { key: 'plan', icon: '▤', label: 'Bảng kế hoạch', hint: 'Theo dõi tiến độ xe' },
+      ]
+    : NAV_ITEMS
   const [activeTab, setActiveTab] = useState('workshop')
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -50,11 +58,17 @@ export default function Layout({ children }) {
       <div className="app-content">
         <header className="app-topbar no-print">
           <button type="button" className="mobile-menu-button" onClick={() => setMobileOpen(true)} aria-label="Mở menu">☰</button>
-          <div><p className="topbar-kicker">{isPaintCustomer ? 'THEO DÕI SƠN XE' : activeTab === 'workshop' ? 'ĐIỀU HÀNH VẬN HÀNH' : 'KIỂM TRA CHẤT LƯỢNG'}</p><h1>{isPaintCustomer ? 'View sơn xe' : activeTab === 'workshop' ? 'Xưởng dịch vụ' : 'Phiếu VRI / PDI'}</h1></div>
+          <div><p className="topbar-kicker">{isPaintWorkspace ? activeTab === 'plan' ? 'KẾ HOẠCH SƠN XE' : 'THEO DÕI SƠN XE' : activeTab === 'workshop' ? 'ĐIỀU HÀNH VẬN HÀNH' : 'KIỂM TRA CHẤT LƯỢNG'}</p><h1>{isPaintWorkspace ? activeTab === 'plan' ? 'Bảng kế hoạch' : 'View sơn xe' : activeTab === 'workshop' ? 'Xưởng dịch vụ' : 'Phiếu VRI / PDI'}</h1></div>
           <div className="topbar-actions"><span className="live-dot">Trực tuyến</span><button type="button" className="btn btn-ghost topbar-signout" onClick={signOut}>Đăng xuất</button></div>
         </header>
         <main className="app-main">
-          {!isPaintCustomer && activeTab === 'vri_pdi' ? <VriPdiChecklist onClose={() => navigate('workshop')} /> : children}
+          {activeTab === 'plan'
+            ? isPaintWorkspace && isValidElement(children)
+              ? cloneElement(children, { activeNavigation: activeTab })
+              : <PlanningBoard />
+            : !isPaintCustomer && activeTab === 'vri_pdi'
+              ? <VriPdiChecklist onClose={() => navigate('workshop')} />
+              : isValidElement(children) ? cloneElement(children, { activeNavigation: activeTab }) : children}
         </main>
       </div>
       <PaintNotificationToast />

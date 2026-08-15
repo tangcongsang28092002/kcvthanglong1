@@ -19,6 +19,12 @@ const legacyStatusMap = {
   completed: 'done',
 }
 
+const prioritySortOrder = {
+  do_first: 0,
+  sequential: 1,
+  do_later: 2,
+}
+
 const editableFields = [
   { field: 'ngay_len_don', label: 'Ngày lên đơn *', type: 'date', required: true },
   { field: 'priority', label: 'Độ ưu tiên', type: 'select', options: PAINT_PRIORITY_OPTIONS },
@@ -219,6 +225,18 @@ export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUs
         if (selected.size > 0 && !selected.has(row.display[key])) return false
       }
       return true
+    }).sort((a, b) => {
+      // Completed orders are always kept below work that still needs attention.
+      const aDone = a.normalizedStatus === 'done'
+      const bDone = b.normalizedStatus === 'done'
+      if (aDone !== bDone) return aDone ? 1 : -1
+
+      // "Ưu tiên làm trước" is the highest priority, followed by the normal queue.
+      const priorityDifference = (prioritySortOrder[a.order.priority || 'sequential'] ?? 1)
+        - (prioritySortOrder[b.order.priority || 'sequential'] ?? 1)
+      if (priorityDifference) return priorityDifference
+
+      return new Date(b.order.created_at || 0) - new Date(a.order.created_at || 0)
     }).map(row => row.order)
   }, [rows, quickSearch, columnFilters])
 
@@ -299,6 +317,8 @@ export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUs
       if (nextStatus === 'done') {
         changes.completed_at = order.completed_at || now
         changes.time_out_workshop = order.time_out_workshop || now
+        // An order no longer occupies a priority slot once it has been completed.
+        changes.priority = 'sequential'
         if (!order.time_in_workshop) changes.time_in_workshop = now
         if (!order.assigned_to) changes.assigned_to = profile?.id || null
       }
@@ -307,6 +327,19 @@ export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUs
       if (error) {
         alert(`Lỗi khi cập nhật trạng thái: ${error.message}`)
         return
+      }
+
+      // When the current high-priority work is finished, promote postponed
+      // active orders so they move into the next work queue automatically.
+      if (nextStatus === 'done') {
+        const { error: promoteError } = await supabase
+          .from('paint_orders')
+          .update({ priority: 'do_first' })
+          .eq('priority', 'do_later')
+          .neq('status', 'done')
+        if (promoteError) {
+          alert(`Đơn đã chuyển sang Xong, nhưng chưa thể nâng ưu tiên các đơn chờ: ${promoteError.message}`)
+        }
       }
 
       if (nextStatus === 'done') notifyPaintCompleted({ ...order, ...changes })
@@ -369,17 +402,10 @@ export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUs
       <div className="record-table-wrap">
         <table className="record-table paint-orders-record-table">
           <colgroup>
-            <col style={{ width: '4%' }} />
-            <col style={{ width: '8%' }} />
-            <col style={{ width: '9%' }} />
-            <col style={{ width: '14%' }} />
-            <col style={{ width: '12%' }} />
-            <col style={{ width: '15%' }} />
-            <col style={{ width: '9%' }} />
-            <col style={{ width: '12%' }} />
-            <col style={{ width: '11%' }} />
-            <col style={{ width: '12%' }} />
-            {profile?.role === 'admin' && <col style={{ width: '9%' }} />}
+            {(profile?.role === 'admin'
+              ? ['3%', '7%', '8%', '12%', '12%', '15%', '8%', '11%', '10%', '9%', '5%']
+              : ['4%', '8%', '9%', '13%', '13%', '16%', '9%', '12%', '9%', '7%']
+            ).map((width, index) => <col key={index} style={{ width }} />)}
           </colgroup>
           <thead>
             <tr>
@@ -541,4 +567,3 @@ export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUs
     </>
   )
 }
-

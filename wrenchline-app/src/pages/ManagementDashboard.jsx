@@ -33,6 +33,7 @@ export default function ManagementDashboard() {
   const [taskError, setTaskError] = useState('')
   const [savingTask, setSavingTask] = useState(false)
   const [deletingUserId, setDeletingUserId] = useState(null)
+  const [processingVehicleId, setProcessingVehicleId] = useState(null)
 
   async function loadAll({ silent = false } = {}) {
     if (!silent) setLoading(true)
@@ -91,6 +92,31 @@ export default function ManagementDashboard() {
 
   async function assignForeman(vehicleId, foremanId) {
     await supabase.from('vehicles').update({ foreman_id: foremanId || null }).eq('id', vehicleId)
+    loadAll()
+  }
+
+  async function editVehicle(vehicle) {
+    const license_plate = window.prompt('Biển số xe:', vehicle.license_plate || '')
+    if (license_plate === null) return
+    const customer_name = window.prompt('Khách hàng:', vehicle.customer_name || '')
+    if (customer_name === null) return
+    const scope_of_repair = window.prompt('Nội dung công việc:', vehicle.scope_of_repair || '')
+    if (scope_of_repair === null) return
+    setProcessingVehicleId(vehicle.id)
+    const { error } = await supabase.from('vehicles').update({ license_plate: license_plate.trim().toUpperCase(), customer_name: customer_name.trim(), scope_of_repair: scope_of_repair.trim() || null }).eq('id', vehicle.id)
+    setProcessingVehicleId(null)
+    if (error) { alert(`Lỗi cập nhật xe: ${error.message}`); return }
+    loadAll()
+  }
+
+  async function deleteVehicle(vehicle) {
+    if (!window.confirm(`Xóa xe ${vehicle.license_plate || ''} và toàn bộ hạng mục công việc liên quan?`)) return
+    setProcessingVehicleId(vehicle.id)
+    const { error: taskError } = await supabase.from('tasks').delete().eq('vehicle_id', vehicle.id)
+    if (taskError) { setProcessingVehicleId(null); alert(`Lỗi xóa hạng mục: ${taskError.message}`); return }
+    const { error } = await supabase.from('vehicles').delete().eq('id', vehicle.id)
+    setProcessingVehicleId(null)
+    if (error) { alert(`Lỗi xóa xe: ${error.message}`); return }
     loadAll()
   }
 
@@ -205,6 +231,7 @@ export default function ManagementDashboard() {
                       <th>Hạng mục sửa chữa / phụ tùng / tổ phụ trách</th>
                       <th>Trạng thái</th>
                       <th>Tổ trưởng phụ trách</th>
+                      <th>Quản lý</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -219,6 +246,12 @@ export default function ManagementDashboard() {
                             <option value="">Chưa phân công</option>
                             {foremen.map(f => <option key={f.id} value={f.id}>{f.full_name}</option>)}
                           </select>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            <button type="button" className="btn btn-ghost" onClick={() => editVehicle(v)} disabled={processingVehicleId === v.id} style={{ padding: '5px 8px', fontSize: 12 }}>Sửa</button>
+                            <button type="button" className="btn" onClick={() => deleteVehicle(v)} disabled={processingVehicleId === v.id} style={{ padding: '5px 8px', fontSize: 12, color: 'var(--red)', borderColor: 'var(--red)', background: 'transparent' }}>{processingVehicleId === v.id ? 'Đang xử lý…' : 'Xóa'}</button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -240,6 +273,10 @@ export default function ManagementDashboard() {
                       <option value="">Chưa phân công tổ trưởng</option>
                       {foremen.map(f => <option key={f.id} value={f.id}>{f.full_name}</option>)}
                     </select>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                      <button type="button" className="btn btn-ghost" onClick={() => editVehicle(v)} disabled={processingVehicleId === v.id} style={{ flex: 1 }}>Sửa</button>
+                      <button type="button" className="btn" onClick={() => deleteVehicle(v)} disabled={processingVehicleId === v.id} style={{ flex: 1, color: 'var(--red)', borderColor: 'var(--red)', background: 'transparent' }}>{processingVehicleId === v.id ? 'Đang xử lý…' : 'Xóa'}</button>
+                    </div>
                   </div>
                 ))}
               </div>

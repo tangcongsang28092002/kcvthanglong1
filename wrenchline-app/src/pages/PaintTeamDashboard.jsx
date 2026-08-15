@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { PAINT_STATUS_LABELS, supabase } from '../lib/supabase'
 import PaintOrdersTable from '../components/PaintOrdersTable'
+import PaintPlanBoard from '../components/PaintPlanBoard'
 import { useAuth } from '../lib/AuthContext'
 
-export default function PaintTeamDashboard() {
+export default function PaintTeamDashboard({ activeNavigation = 'workshop' }) {
   const { profile } = useAuth()
   const isPaintCustomer = profile?.role === 'paint_customer'
   const [orders, setOrders] = useState([])
@@ -43,6 +44,10 @@ export default function PaintTeamDashboard() {
 
   const waiting = orders.filter(o => o.status === 'waiting').length
   const painting = orders.filter(o => o.status === 'painting').length
+
+  if (activeNavigation === 'plan') {
+    return <div style={{ padding: '24px 0' }}><PaintPlanBoard orders={orders} loading={loading} error={loadError} /></div>
+  }
 
   return (
     <div style={{ padding: '24px 0' }}>
