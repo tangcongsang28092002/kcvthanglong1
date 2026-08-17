@@ -147,6 +147,22 @@ function PaintStatusBadge({ status }) {
   return <span className={`status-badge status-${tone}`}>{PAINT_STATUS_LABELS[normalized] || status}</span>
 }
 
+// Sort buttons in the header (A→Z / Z→A). Clicking cycles asc → desc → off.
+// "Off" means the list falls back to the manual drag-and-drop order.
+function SortButton({ columnKey, sortState, onSort }) {
+  const active = sortState.key === columnKey
+  const arrow = active ? (sortState.direction === 'asc' ? '↑' : '↓') : '↕'
+  return (
+    <button
+      type="button"
+      className={`col-sort-btn ${active ? 'col-sort-btn-active' : ''}`}
+      onClick={() => onSort(columnKey)}
+      aria-label={`Sắp xếp theo ${columnKey}`}
+      title={active ? (sortState.direction === 'asc' ? 'Đang tăng dần (A→Z) — bấm để đảo ngược' : 'Đang giảm dần (Z→A) — bấm để bỏ sắp xếp') : 'Sắp xếp tăng dần'}
+    >{arrow}</button>
+  )
+}
+
 function PriorityBadge({ priority }) {
   const normalized = priority || 'sequential'
   const tone = normalized === 'do_first' ? 'var(--red)' : normalized === 'do_later' ? 'var(--blue)' : 'var(--text-muted)'
@@ -180,6 +196,75 @@ export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUs
     thoi_gian: new Set(),
     phu_trach: new Set(),
   })
+
+  // Column sort (A→Z / Z→A). When a column is active, it overrides the
+  // manual drag-and-drop order below. Clearing it (3rd click) restores
+  // whatever order the user last dragged the rows into.
+  const [sortState, setSortState] = useState({ key: null, direction: 'asc' })
+  function toggleSort(key) {
+    setSortState(current => {
+      if (current.key !== key) return { key, direction: 'asc' }
+      if (current.direction === 'asc') return { key, direction: 'desc' }
+      return { key: null, direction: 'asc' }
+    })
+  }
+
+  // Drag-and-drop reordering. Only active while no column sort is applied
+  // and the viewer is allowed to change order (not the read-only customer
+  // view). Row numbers (STT) always reflect display position — only the
+  // underlying sort_order value is persisted.
+  const [dragIndex, setDragIndex] = useState(null)
+  const [overIndex, setOverIndex] = useState(null)
+  const [savingOrder, setSavingOrder] = useState(false)
+  const canReorder = !readOnly && sortState.key === null
+
+  const sortValueGetters = {
+    ngay: order => new Date(order.ngay_len_don || order.created_at || 0).getTime(),
+    so_thung: order => (order.so_thung || '').toLowerCase(),
+    xe: order => [order.model, order.ten_thung].filter(Boolean).join(' ').toLowerCase(),
+    so_khung: order => (order.so_khung || '').toLowerCase(),
+    priority: order => prioritySortOrder[order.priority || 'sequential'] ?? 1,
+    status: order => normalizePaintStatus(order.status),
+    thoi_gian: order => new Date(order.time_in_workshop || 0).getTime(),
+    phu_trach: order => (order.handler?.full_name || order.creator?.full_name || '').toLowerCase(),
+  }
+
+  async function persistMove(fromIndex, toIndex, displayList) {
+    if (fromIndex === toIndex) return
+    const movedOrder = displayList[fromIndex]
+    const reordered = displayList.filter((_, i) => i !== fromIndex)
+    reordered.splice(toIndex, 0, movedOrder)
+    const newPos = reordered.indexOf(movedOrder)
+    const prev = reordered[newPos - 1]
+    const next = reordered[newPos + 1]
+    const prevSort = prev?.sort_order ?? null
+    const nextSort = next?.sort_order ?? null
+
+    let newSortOrder
+    if (prevSort == null && nextSort == null) newSortOrder = Date.now()
+    else if (prevSort == null) newSortOrder = nextSort - 1000
+    else if (nextSort == null) newSortOrder = prevSort + 1000
+    else newSortOrder = (prevSort + nextSort) / 2
+
+    setSavingOrder(true)
+    const { error } = await supabase.from('paint_orders').update({ sort_order: newSortOrder }).eq('id', movedOrder.id)
+    setSavingOrder(false)
+    if (error) { alert(`Lỗi khi sắp xếp: ${error.message}`); return }
+    onRefresh?.()
+  }
+
+  function handleDrop(dropIndex) {
+    if (dragIndex === null) { setOverIndex(null); return }
+    if (dragIndex !== dropIndex) persistMove(dragIndex, dropIndex, visibleOrders)
+    setDragIndex(null)
+    setOverIndex(null)
+  }
+
+  function moveStep(index, direction) {
+    const target = index + direction
+    if (target < 0 || target >= visibleOrders.length) return
+    persistMove(index, target, visibleOrders)
+  }
 
   const rows = useMemo(() => orders.map(order => {
     const normalizedStatus = normalizePaintStatus(order.status)
@@ -218,27 +303,39 @@ export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUs
 
   const visibleOrders = useMemo(() => {
     const q = quickSearch.trim().toLowerCase()
-    return rows.filter(row => {
+    const filtered = rows.filter(row => {
       if (q && !Object.values(row.display).some(value => String(value).toLowerCase().includes(q))) return false
       for (const key of Object.keys(columnFilters)) {
         const selected = columnFilters[key]
         if (selected.size > 0 && !selected.has(row.display[key])) return false
       }
       return true
-    }).sort((a, b) => {
-      // Completed orders are always kept below work that still needs attention.
-      const aDone = a.normalizedStatus === 'done'
-      const bDone = b.normalizedStatus === 'done'
-      if (aDone !== bDone) return aDone ? 1 : -1
+    })
 
-      // "Ưu tiên làm trước" is the highest priority, followed by the normal queue.
-      const priorityDifference = (prioritySortOrder[a.order.priority || 'sequential'] ?? 1)
-        - (prioritySortOrder[b.order.priority || 'sequential'] ?? 1)
-      if (priorityDifference) return priorityDifference
+    if (sortState.key) {
+      const getValue = sortValueGetters[sortState.key]
+      const dir = sortState.direction === 'asc' ? 1 : -1
+      return filtered.slice().sort((a, b) => {
+        const va = getValue(a.order)
+        const vb = getValue(b.order)
+        if (va < vb) return -1 * dir
+        if (va > vb) return 1 * dir
+        return 0
+      }).map(row => row.order)
+    }
 
-      return new Date(b.order.created_at || 0) - new Date(a.order.created_at || 0)
+    // No column sort active: use the manual drag-and-drop order. Rows
+    // without a sort_order yet (older data before the column existed)
+    // fall back to newest-first and sit after any manually-placed rows.
+    return filtered.slice().sort((a, b) => {
+      const sa = a.order.sort_order
+      const sb = b.order.sort_order
+      if (sa == null && sb == null) return new Date(b.order.created_at || 0) - new Date(a.order.created_at || 0)
+      if (sa == null) return 1
+      if (sb == null) return -1
+      return sa - sb
     }).map(row => row.order)
-  }, [rows, quickSearch, columnFilters])
+  }, [rows, quickSearch, columnFilters, sortState])
 
   function updateColumnFilter(key, nextSet) {
     setColumnFilters(current => ({ ...current, [key]: nextSet }))
@@ -394,31 +491,36 @@ export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUs
           aria-label="Tìm nhanh đơn sơn"
         />
         <span>{visibleOrders.length}/{orders.length} đơn</span>
+        {sortState.key && (
+          <button type="button" className="btn btn-ghost" onClick={() => setSortState({ key: null, direction: 'asc' })}>Bỏ sắp xếp cột</button>
+        )}
         {hasActiveFilters && (
           <button type="button" className="btn btn-ghost" onClick={clearFilters}>Xóa lọc</button>
         )}
+        {savingOrder && <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>Đang lưu thứ tự…</span>}
       </div>
 
       <div className="record-table-wrap">
         <table className="record-table paint-orders-record-table">
           <colgroup>
             {(profile?.role === 'admin'
-              ? ['3%', '7%', '8%', '12%', '12%', '15%', '8%', '11%', '10%', '9%', '5%']
-              : ['4%', '8%', '9%', '13%', '13%', '16%', '9%', '12%', '9%', '7%']
+              ? ['3%', '3%', '7%', '8%', '12%', '12%', '12%', '8%', '11%', '10%', '9%', '5%']
+              : ['3%', '4%', '8%', '9%', '13%', '13%', '13%', '9%', '12%', '9%', '7%']
             ).map((width, index) => <col key={index} style={{ width }} />)}
           </colgroup>
           <thead>
             <tr>
+              <th title="Kéo thả hàng để sắp xếp thứ tự">⠿</th>
               <th>STT</th>
-              <th>Ngày <ColumnFilterMenu label="Ngày" options={filterOptions.ngay} selected={columnFilters.ngay} onChange={next => updateColumnFilter('ngay', next)} /></th>
-              <th>Số thùng <ColumnFilterMenu label="Số thùng" options={filterOptions.so_thung} selected={columnFilters.so_thung} onChange={next => updateColumnFilter('so_thung', next)} /></th>
-              <th>Xe <ColumnFilterMenu label="Xe" options={filterOptions.xe} selected={columnFilters.xe} onChange={next => updateColumnFilter('xe', next)} /></th>
-              <th>Số khung <ColumnFilterMenu label="Số khung" options={filterOptions.so_khung} selected={columnFilters.so_khung} onChange={next => updateColumnFilter('so_khung', next)} /></th>
+              <th>Ngày <SortButton columnKey="ngay" sortState={sortState} onSort={toggleSort} /> <ColumnFilterMenu label="Ngày" options={filterOptions.ngay} selected={columnFilters.ngay} onChange={next => updateColumnFilter('ngay', next)} /></th>
+              <th>Số thùng <SortButton columnKey="so_thung" sortState={sortState} onSort={toggleSort} /> <ColumnFilterMenu label="Số thùng" options={filterOptions.so_thung} selected={columnFilters.so_thung} onChange={next => updateColumnFilter('so_thung', next)} /></th>
+              <th>Xe <SortButton columnKey="xe" sortState={sortState} onSort={toggleSort} /> <ColumnFilterMenu label="Xe" options={filterOptions.xe} selected={columnFilters.xe} onChange={next => updateColumnFilter('xe', next)} /></th>
+              <th>Số khung <SortButton columnKey="so_khung" sortState={sortState} onSort={toggleSort} /> <ColumnFilterMenu label="Số khung" options={filterOptions.so_khung} selected={columnFilters.so_khung} onChange={next => updateColumnFilter('so_khung', next)} /></th>
               <th>Mô tả</th>
-              <th>Ưu tiên <ColumnFilterMenu label="Ưu tiên" options={filterOptions.priority} selected={columnFilters.priority} onChange={next => updateColumnFilter('priority', next)} /></th>
-              <th>Trạng thái <ColumnFilterMenu label="Trạng thái" options={filterOptions.status} selected={columnFilters.status} onChange={next => updateColumnFilter('status', next)} /></th>
-              <th>Thời gian xưởng <ColumnFilterMenu label="Thời gian xưởng" options={filterOptions.thoi_gian} selected={columnFilters.thoi_gian} onChange={next => updateColumnFilter('thoi_gian', next)} /></th>
-              <th>Phụ trách <ColumnFilterMenu label="Phụ trách" options={filterOptions.phu_trach} selected={columnFilters.phu_trach} onChange={next => updateColumnFilter('phu_trach', next)} /></th>
+              <th>Ưu tiên <SortButton columnKey="priority" sortState={sortState} onSort={toggleSort} /> <ColumnFilterMenu label="Ưu tiên" options={filterOptions.priority} selected={columnFilters.priority} onChange={next => updateColumnFilter('priority', next)} /></th>
+              <th>Trạng thái <SortButton columnKey="status" sortState={sortState} onSort={toggleSort} /> <ColumnFilterMenu label="Trạng thái" options={filterOptions.status} selected={columnFilters.status} onChange={next => updateColumnFilter('status', next)} /></th>
+              <th>Thời gian xưởng <SortButton columnKey="thoi_gian" sortState={sortState} onSort={toggleSort} /> <ColumnFilterMenu label="Thời gian xưởng" options={filterOptions.thoi_gian} selected={columnFilters.thoi_gian} onChange={next => updateColumnFilter('thoi_gian', next)} /></th>
+              <th>Phụ trách <SortButton columnKey="phu_trach" sortState={sortState} onSort={toggleSort} /> <ColumnFilterMenu label="Phụ trách" options={filterOptions.phu_trach} selected={columnFilters.phu_trach} onChange={next => updateColumnFilter('phu_trach', next)} /></th>
               {profile?.role === 'admin' && <th>Quản lý</th>}
             </tr>
           </thead>
@@ -430,7 +532,22 @@ export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUs
               const handlerName = order.handler?.full_name || (order.assigned_to === profile?.id ? profile?.full_name : null)
 
               return (
-                <tr key={order.id}>
+                <tr
+                  key={order.id}
+                  draggable={canReorder}
+                  onDragStart={canReorder ? () => setDragIndex(index) : undefined}
+                  onDragOver={canReorder ? event => { event.preventDefault(); if (overIndex !== index) setOverIndex(index) } : undefined}
+                  onDrop={canReorder ? event => { event.preventDefault(); handleDrop(index) } : undefined}
+                  onDragEnd={canReorder ? () => { setDragIndex(null); setOverIndex(null) } : undefined}
+                  className={[dragIndex === index && 'row-dragging', overIndex === index && dragIndex !== index && 'row-drag-over'].filter(Boolean).join(' ')}
+                >
+                  <td className="drag-handle-cell">
+                    {canReorder ? (
+                      <span className="drag-handle" title="Kéo để sắp xếp">⠿</span>
+                    ) : (
+                      <span className="drag-handle drag-handle-disabled" title={readOnly ? '' : 'Bỏ sắp xếp cột để kéo thả'}>⠿</span>
+                    )}
+                  </td>
                   <td style={{ fontWeight: 700, color: 'var(--text-muted)' }}>{index + 1}</td>
                   <td><span className="paint-date-highlight">{formatDateVN(order.ngay_len_don || order.created_at)}</span></td>
                   <td><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13 }}>{order.so_thung}</span></td>
@@ -499,7 +616,15 @@ export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUs
             <div key={order.id} className="card" style={{ padding: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
                 <div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>STT {index + 1} · <span className="paint-date-highlight">{formatDateVN(order.ngay_len_don || order.created_at)}</span></div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span>STT {index + 1} · <span className="paint-date-highlight">{formatDateVN(order.ngay_len_don || order.created_at)}</span></span>
+                    {canReorder && (
+                      <span style={{ display: 'inline-flex', gap: 2 }}>
+                        <button type="button" className="btn btn-ghost" disabled={index === 0} onClick={() => moveStep(index, -1)} style={{ padding: '2px 6px', fontSize: 11 }} title="Đưa lên trên">▲</button>
+                        <button type="button" className="btn btn-ghost" disabled={index === visibleOrders.length - 1} onClick={() => moveStep(index, 1)} style={{ padding: '2px 6px', fontSize: 11 }} title="Đưa xuống dưới">▼</button>
+                      </span>
+                    )}
+                  </div>
                   <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 16, marginBottom: 2 }}>{order.so_thung}</div>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{order.model || '—'} — {order.ten_thung || '—'}</div>
                 </div>
@@ -567,3 +692,4 @@ export default function PaintOrdersTable({ orders = [], onRefresh, showCurrentUs
     </>
   )
 }
+

@@ -27,7 +27,7 @@ từ cùng tab đó.
 ## Hiển thị phiếu theo dõi
 
 Danh sách phiếu theo dõi (xe) tự chuyển đổi theo kích thước màn hình:
-- **Máy tính bàn / laptop** (rộng hơn 860px): dạng bảng kiểu Excel, dễ quét nhiều dòng.
+- **Máy tính bàn / laptop** (rộng hơn 860px): dạng bảng kiểu Excel, dễ quét nhiều dòng..
 - **Điện thoại** (hẹp hơn 860px): dạng thẻ (card), dễ chạm và đọc trên màn hình nhỏ.
 
 ## Đã cấu hình sẵn
@@ -46,7 +46,7 @@ npm install
 npm run dev
 ```
 
-Mở địa chỉ hiển thị trong terminal (thường là `http://localhost:5173`).
+Mở địa chỉ hiển thị trong terminal (thường là `http://localhost:5173`)..
 
 ## Triển khai lên Vercel
 

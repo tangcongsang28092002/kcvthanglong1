@@ -672,6 +672,37 @@ h1, h2, h3 {
 .paint-orders-record-table .status-badge { max-width: 100%; padding: 4px 7px; font-size: 10px; white-space: normal; }
 .paint-orders-record-table select { max-width: 100%; font-size: 11px !important; padding: 5px 6px !important; }
 
+/* Column A→Z / Z→A sort toggle, sits next to the AutoFilter funnel button. */
+.col-sort-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 3px;
+  border-radius: 4px;
+  margin-left: 2px;
+}
+.col-sort-btn:hover { color: var(--text); background: var(--surface); }
+.col-sort-btn-active { color: var(--accent); font-weight: 700; }
+
+/* Drag-and-drop row reordering. STT stays sequential; only the underlying
+   sort order changes, so the handle column is intentionally unlabeled. */
+.drag-handle-cell { text-align: center; width: 28px; }
+.drag-handle {
+  display: inline-block;
+  cursor: grab;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+}
+.drag-handle:active { cursor: grabbing; }
+.drag-handle-disabled { cursor: not-allowed; opacity: .3; }
+.paint-orders-record-table tbody tr.row-dragging { opacity: .4; }
+.paint-orders-record-table tbody tr.row-drag-over td { box-shadow: inset 0 2px 0 var(--accent); }
+
 /* Planning board: compact enough for laptop screens while retaining every field. */
 .plan-board-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .plan-board-heading h2 { margin: 0 0 4px; font-size: 22px; }
