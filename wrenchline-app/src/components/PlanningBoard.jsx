@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import * as XLSX from 'xlsx'
 import { supabase, todaySaigon } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import { withViewTransition } from '../lib/viewTransition'
 
 const emptyPlan = { license_plate: '', customer_name: '', insurance: '', scope_of_repair: '', arrival_date: todaySaigon(), estimated_completion_date: '', plan_parts_status: '', status: 'received', overall_progress: '', plan_note: '', plan_completed: false }
 const normalise = value => String(value || '').trim().toLocaleLowerCase('vi-VN')
@@ -42,7 +43,8 @@ export default function PlanningBoard() {
     const [{ data: vehicleData, error: vehicleError }, { data: taskData, error: taskError }] = await Promise.all([
       supabase.from('vehicles').select('*').order('created_at', { ascending: false }), supabase.from('tasks').select('*'),
     ])
-    setVehicles(vehicleData || []); setTasks(taskData || []); setError(vehicleError?.message || taskError?.message || '')
+    const applyData = () => { setVehicles(vehicleData || []); setTasks(taskData || []); setError(vehicleError?.message || taskError?.message || '') }
+    if (silent) withViewTransition(applyData); else applyData()
     if (!silent) setLoading(false)
   }
   useEffect(() => { loadPlan() }, [])
@@ -106,7 +108,10 @@ export default function PlanningBoard() {
     setError(''); setMessage('')
     const { error: saveError } = await supabase.from('vehicles').update(changes).eq('id', vehicle.id)
     if (saveError) { setError(`Không thể lưu: ${saveError.message}`); return }
-    setVehicles(current => current.map(item => item.id === vehicle.id ? { ...item, ...changes } : item))
+    // Toggling "Hoàn thiện" moves this row's position in sortedVehicles
+    // (completed rows sort to the bottom). Wrap in a view transition so the
+    // row slides to its new spot instead of the table snapping instantly.
+    withViewTransition(() => setVehicles(current => current.map(item => item.id === vehicle.id ? { ...item, ...changes } : item)))
     setMessage(completed ? 'Xe đã được đánh dấu xuất xưởng.' : 'Xe được đưa lại vào danh sách đang xử lý.')
   }
 
@@ -133,7 +138,7 @@ export default function PlanningBoard() {
     {message && <p className="plan-message">✓ {message}</p>}{error && <p className="error-text">{error}</p>}
     <div className="plan-table-wrap"><table className="plan-table plan-table-editable"><thead><tr><th>STT</th><th>Biển số xe</th><th>Khách hàng</th><th>Bảo hiểm</th><th>Nội dung công việc</th><th>Thời gian vào</th><th>Thời gian xe ra</th><th>Tình trạng phụ tùng</th><th>Tiến độ chung</th><th>Hoàn thiện</th><th>Ghi chú</th>{profile?.role === 'admin' && <th>Quản lý</th>}</tr></thead><tbody>
       <tr className="plan-new-row"><td>+</td><td><input className="plan-cell-input" value={newPlan.license_plate} onChange={e => setNewPlan(v => ({ ...v, license_plate: e.target.value.toUpperCase() }))} placeholder="29H-917.72" /></td><td><input className="plan-cell-input" value={newPlan.customer_name} onChange={e => setNewPlan(v => ({ ...v, customer_name: e.target.value }))} placeholder="Khách hàng" /></td><td><input className="plan-cell-input" value={newPlan.insurance} onChange={e => setNewPlan(v => ({ ...v, insurance: e.target.value }))} placeholder="Bảo hiểm" /></td><td><textarea className="plan-cell-input plan-cell-textarea" value={newPlan.scope_of_repair} onChange={e => setNewPlan(v => ({ ...v, scope_of_repair: e.target.value }))} placeholder="Nội dung công việc" /></td><td><input className="plan-cell-input" type="date" value={newPlan.arrival_date} onChange={e => setNewPlan(v => ({ ...v, arrival_date: e.target.value }))} /></td><td><input className="plan-cell-input" type="date" value={newPlan.estimated_completion_date} onChange={e => setNewPlan(v => ({ ...v, estimated_completion_date: e.target.value }))} /></td><td><input className="plan-cell-input" value={newPlan.plan_parts_status} onChange={e => setNewPlan(v => ({ ...v, plan_parts_status: e.target.value }))} placeholder="Đủ / Thiếu" /></td><td><input className="plan-cell-input" value={newPlan.overall_progress} onChange={e => setNewPlan(v => ({ ...v, overall_progress: e.target.value }))} placeholder="Tự nhập tiến độ" /></td><td><input type="checkbox" checked={newPlan.plan_completed} onChange={e => setNewPlan(v => ({ ...v, plan_completed: e.target.checked, estimated_completion_date: e.target.checked && !v.estimated_completion_date ? todaySaigon() : v.estimated_completion_date }))} /></td><td><textarea className="plan-cell-input plan-cell-textarea" value={newPlan.plan_note} onChange={e => setNewPlan(v => ({ ...v, plan_note: e.target.value }))} placeholder="Ghi chú" /></td>{profile?.role === 'admin' && <td />}</tr>
-      {sortedVehicles.map((vehicle, index) => { const vehicleTasks = tasksByVehicle[vehicle.id] || []; return <tr key={vehicle.id} className={vehicle.plan_completed ? 'plan-completed-row' : ''}><td>{index + 1}</td><td>{input(vehicle, 'license_plate')}</td><td>{input(vehicle, 'customer_name')}</td><td>{input(vehicle, 'insurance')}</td><td><textarea className="plan-cell-input plan-cell-textarea" defaultValue={vehicle.scope_of_repair || vehicleTasks.map(task => task.description).filter(Boolean).join('; ')} onBlur={e => saveCell(vehicle, 'scope_of_repair', e.target.value)} /></td><td>{input(vehicle, 'arrival_date', 'date')}</td><td>{input(vehicle, 'estimated_completion_date', 'date')}</td><td>{input(vehicle, 'plan_parts_status', 'text', getPartsStatus(vehicleTasks))}</td><td>{input(vehicle, 'overall_progress', 'text', '')}</td><td><input type="checkbox" checked={Boolean(vehicle.plan_completed)} onChange={e => setCompleted(vehicle, e.target.checked)} aria-label="Xe đã xuất xưởng" /></td><td><textarea className="plan-cell-input plan-cell-textarea" defaultValue={vehicle.plan_note || ''} onBlur={e => saveCell(vehicle, 'plan_note', e.target.value)} /></td>{profile?.role === 'admin' && <td><div className="plan-admin-actions"><button type="button" className="btn btn-ghost" onClick={() => editPlan(vehicle)}>Sửa</button><button type="button" className="btn plan-delete-btn" onClick={() => deletePlan(vehicle)}>Xóa</button></div></td>}</tr> })}
+      {sortedVehicles.map((vehicle, index) => { const vehicleTasks = tasksByVehicle[vehicle.id] || []; return <tr key={vehicle.id} className={vehicle.plan_completed ? 'plan-completed-row' : ''} style={{ viewTransitionName: `plan-row-${vehicle.id}` }}><td>{index + 1}</td><td>{input(vehicle, 'license_plate')}</td><td>{input(vehicle, 'customer_name')}</td><td>{input(vehicle, 'insurance')}</td><td><textarea className="plan-cell-input plan-cell-textarea" defaultValue={vehicle.scope_of_repair || vehicleTasks.map(task => task.description).filter(Boolean).join('; ')} onBlur={e => saveCell(vehicle, 'scope_of_repair', e.target.value)} /></td><td>{input(vehicle, 'arrival_date', 'date')}</td><td>{input(vehicle, 'estimated_completion_date', 'date')}</td><td>{input(vehicle, 'plan_parts_status', 'text', getPartsStatus(vehicleTasks))}</td><td>{input(vehicle, 'overall_progress', 'text', '')}</td><td><input type="checkbox" checked={Boolean(vehicle.plan_completed)} onChange={e => setCompleted(vehicle, e.target.checked)} aria-label="Xe đã xuất xưởng" /></td><td><textarea className="plan-cell-input plan-cell-textarea" defaultValue={vehicle.plan_note || ''} onBlur={e => saveCell(vehicle, 'plan_note', e.target.value)} /></td>{profile?.role === 'admin' && <td><div className="plan-admin-actions"><button type="button" className="btn btn-ghost" onClick={() => editPlan(vehicle)}>Sửa</button><button type="button" className="btn plan-delete-btn" onClick={() => deletePlan(vehicle)}>Xóa</button></div></td>}</tr> })}
     </tbody></table></div>
   </section>
 }

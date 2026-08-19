@@ -3,6 +3,7 @@ import { PAINT_STATUS_LABELS, supabase } from '../lib/supabase'
 import PaintOrdersTable from '../components/PaintOrdersTable'
 import PaintPlanBoard from '../components/PaintPlanBoard'
 import { useAuth } from '../lib/AuthContext'
+import { withViewTransition } from '../lib/viewTransition'
 
 export default function PaintTeamDashboard({ activeNavigation = 'workshop' }) {
   const { profile } = useAuth()
@@ -23,7 +24,16 @@ export default function PaintTeamDashboard({ activeNavigation = 'workshop' }) {
     if (filter === 'completed') query = query.eq('status', 'done')
     const { data, error } = await query
     if (error) setLoadError(`Không thể tải đơn sơn: ${error.message}`)
-    setOrders(data || [])
+    // Silent refreshes (status change, realtime update, polling) can shuffle
+    // row order (e.g. a completed order drops to the bottom). Wrapping the
+    // update in a view transition animates that move smoothly instead of
+    // the list snapping/flickering. The initial, non-silent load still just
+    // sets state directly since there's a loading screen either way.
+    if (silent) {
+      withViewTransition(() => setOrders(data || []))
+    } else {
+      setOrders(data || [])
+    }
     if (!silent) setLoading(false)
   }
 
@@ -101,7 +111,13 @@ export default function PaintTeamDashboard({ activeNavigation = 'workshop' }) {
           {loadError}
         </div>
       ) : (
-        <PaintOrdersTable orders={orders} onRefresh={loadOrders} showCurrentUserLabel />
+        // silent: true here is the key fix — without it, every status
+        // change / edit / delete inside the table called loadOrders() with
+        // its default (non-silent) mode, which flips `loading` back on,
+        // unmounts the whole table for the "Đang tải…" placeholder, then
+        // remounts it. That unmount/remount is exactly what caused the
+        // flicker and the scroll position jumping back to the top.
+        <PaintOrdersTable orders={orders} onRefresh={() => loadOrders({ silent: true })} showCurrentUserLabel />
       )}
     </div>
   )

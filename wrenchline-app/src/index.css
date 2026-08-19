@@ -607,6 +607,50 @@ h1, h2, h3 {
 .paint-order-list-tools input { flex: 1; min-width: 240px; padding: 10px 12px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
 .paint-order-list-tools span { color: var(--text-muted); font-size: 12px; font-weight: 700; white-space: nowrap; }
 
+/* Smooth re-sort of the paint orders list/cards (see withViewTransition in
+   src/lib/viewTransition.js). Rows/cards carry a unique view-transition-name
+   so the browser slides each one to its new position instead of the whole
+   list flashing. Kept short and disabled for users who prefer less motion. */
+::view-transition-group(*) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*) {
+    animation: none !important;
+  }
+}
+
+/* Drag-and-drop handle for manually reordering the paint orders queue. */
+.paint-order-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+}
+.paint-order-drag-handle:hover { background: var(--surface-raised); color: var(--text); }
+.paint-order-drag-handle:active { cursor: grabbing; }
+.paint-order-drag-handle-disabled {
+  cursor: not-allowed;
+  color: var(--border);
+  opacity: 0.6;
+}
+.paint-order-sortable-card { cursor: default; }
+.paint-order-card-drag-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+
 /* Excel-style AutoFilter: a funnel button in each header cell opens a
    checklist popover of the column's distinct values. */
 .col-filter { position: relative; display: inline-block; margin-left: 4px; }
@@ -671,37 +715,6 @@ h1, h2, h3 {
 .paint-frame-highlight { display: inline-flex; align-items: center; max-width: 100%; padding: 3px 6px; border-radius: 6px; background: rgba(255,255,255,.08); color: var(--text); border: 1px solid var(--accent); font-family: var(--font-mono); font-size: 11px; font-weight: 800; letter-spacing: .02em; white-space: normal; overflow-wrap: anywhere; }
 .paint-orders-record-table .status-badge { max-width: 100%; padding: 4px 7px; font-size: 10px; white-space: normal; }
 .paint-orders-record-table select { max-width: 100%; font-size: 11px !important; padding: 5px 6px !important; }
-
-/* Column A→Z / Z→A sort toggle, sits next to the AutoFilter funnel button. */
-.col-sort-btn {
-  border: none;
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  font-size: 12px;
-  line-height: 1;
-  padding: 2px 3px;
-  border-radius: 4px;
-  margin-left: 2px;
-}
-.col-sort-btn:hover { color: var(--text); background: var(--surface); }
-.col-sort-btn-active { color: var(--accent); font-weight: 700; }
-
-/* Drag-and-drop row reordering. STT stays sequential; only the underlying
-   sort order changes, so the handle column is intentionally unlabeled. */
-.drag-handle-cell { text-align: center; width: 28px; }
-.drag-handle {
-  display: inline-block;
-  cursor: grab;
-  color: var(--text-dim);
-  font-size: 14px;
-  line-height: 1;
-  user-select: none;
-}
-.drag-handle:active { cursor: grabbing; }
-.drag-handle-disabled { cursor: not-allowed; opacity: .3; }
-.paint-orders-record-table tbody tr.row-dragging { opacity: .4; }
-.paint-orders-record-table tbody tr.row-drag-over td { box-shadow: inset 0 2px 0 var(--accent); }
 
 /* Planning board: compact enough for laptop screens while retaining every field. */
 .plan-board-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }

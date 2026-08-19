@@ -8,6 +8,7 @@ import RepairItemsPreview from '../components/RepairItemsPreview'
 import PaintOrderForm from '../components/PaintOrderForm'
 import PaintOrdersTable from '../components/PaintOrdersTable'
 import { ROLES } from '../lib/supabase'
+import { withViewTransition } from '../lib/viewTransition'
 
 const TABS = [
   { key: 'create', label: 'Lên phiếu' },
@@ -43,10 +44,15 @@ export default function ManagementDashboard() {
       supabase.from('tasks').select('*, vehicles(license_plate), assignee:assigned_to(full_name)').order('created_at', { ascending: false }),
       supabase.from('paint_orders').select('*, creator:created_by(full_name), handler:assigned_to(full_name)').order('created_at', { ascending: false }),
     ])
-    setVehicles(v || [])
-    setStaff(p || [])
-    setTasks(t || [])
-    setPaintOrders(po || [])
+    const applyData = () => {
+      setVehicles(v || [])
+      setStaff(p || [])
+      setTasks(t || [])
+      setPaintOrders(po || [])
+    }
+    // See loadOrders() in PaintTeamDashboard.jsx for why silent updates are
+    // wrapped in a view transition (smooth reorder instead of a hard snap).
+    if (silent) withViewTransition(applyData); else applyData()
     if (!silent) setLoading(false)
   }
 
@@ -360,7 +366,10 @@ export default function ManagementDashboard() {
                   </button>
                 ))}
               </div>
-              <PaintOrdersTable orders={paintFilter === 'all' ? paintOrders : paintOrders.filter(o => o.status === paintFilter)} onRefresh={loadAll} />
+              {/* silent: true avoids re-triggering the full-page loading state
+                  (and the flicker/scroll-jump that came with it) on every
+                  status change inside the table — see PaintTeamDashboard.jsx */}
+              <PaintOrdersTable orders={paintFilter === 'all' ? paintOrders : paintOrders.filter(o => o.status === paintFilter)} onRefresh={() => loadAll({ silent: true })} />
             </div>
           )}
 

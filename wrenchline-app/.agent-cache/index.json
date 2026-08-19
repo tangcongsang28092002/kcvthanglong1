@@ -1,0 +1,610 @@
+{
+  "version": 1,
+  "root": "c:\\Users\\Hai Le\\Downloads\\wrenchline-app\\wrenchline-app",
+  "generatedAt": 1786413328092,
+  "files": {
+    "vite.config.js": {
+      "path": "vite.config.js",
+      "language": "javascript",
+      "role": "config",
+      "hash": "2eaa6199953a3624601a25e1158fa4a21d9188a0",
+      "size": 161,
+      "lines": 8,
+      "symbols": [],
+      "imports": [
+        "vite",
+        "@vitejs/plugin-react"
+      ],
+      "indexedAt": 1786413324209
+    },
+    "src/main.jsx": {
+      "path": "src/main.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "143cd7859c0fec24a24bf4fefb4c7ff6fa5acba3",
+      "size": 229,
+      "lines": 11,
+      "symbols": [],
+      "imports": [
+        "react",
+        "react-dom/client",
+        "./index.css",
+        "./App.jsx"
+      ],
+      "indexedAt": 1786413324311
+    },
+    "src/pages/TechnicianDashboard.jsx": {
+      "path": "src/pages/TechnicianDashboard.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "beb4a38ab823e4f54d98530d1488bb2285a0a150",
+      "size": 2994,
+      "lines": 65,
+      "symbols": [
+        {
+          "name": "TASK_STATUSES",
+          "kind": "constant",
+          "line": 7,
+          "signature": "const TASK_STATUSES = ['pending', 'in_progress', 'completed']",
+          "exported": false
+        },
+        {
+          "name": "TASK_LABELS",
+          "kind": "constant",
+          "line": 8,
+          "signature": "const TASK_LABELS = { pending: 'Chờ xử lý', in_progress: 'Đang thực hiện', completed: 'Hoàn thành' }",
+          "exported": false
+        },
+        {
+          "name": "loadTasks",
+          "kind": "function",
+          "line": 15,
+          "signature": "async function loadTasks() {",
+          "exported": false
+        },
+        {
+          "name": "updateTaskStatus",
+          "kind": "function",
+          "line": 28,
+          "signature": "async function updateTaskStatus(task, status) {",
+          "exported": false
+        }
+      ],
+      "imports": [
+        "react",
+        "../lib/supabase",
+        "../lib/AuthContext",
+        "../components/StatusBadge",
+        "../components/RepairItemsPreview"
+      ],
+      "indexedAt": 1786413324592
+    },
+    "src/pages/ManagementDashboard.jsx": {
+      "path": "src/pages/ManagementDashboard.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "6f78be07a1f0d0d10d4b1a1ebb57d5fb6c8c835b",
+      "size": 12595,
+      "lines": 254,
+      "symbols": [
+        {
+          "name": "TABS",
+          "kind": "constant",
+          "line": 10,
+          "signature": "const TABS = [",
+          "exported": false
+        },
+        {
+          "name": "loadAll",
+          "kind": "function",
+          "line": 31,
+          "signature": "async function loadAll() {",
+          "exported": false
+        },
+        {
+          "name": "tasksByVehicle",
+          "kind": "function",
+          "line": 46,
+          "signature": "const tasksByVehicle = useMemo(() => {",
+          "exported": false
+        },
+        {
+          "name": "filteredVehicles",
+          "kind": "function",
+          "line": 55,
+          "signature": "const filteredVehicles = useMemo(() => {",
+          "exported": false
+        },
+        {
+          "name": "foremen",
+          "kind": "function",
+          "line": 65,
+          "signature": "const foremen = staff.filter(s => s.role === 'foreman')",
+          "exported": false
+        },
+        {
+          "name": "workers",
+          "kind": "function",
+          "line": 66,
+          "signature": "const workers = staff.filter(s => s.role === 'foreman' || s.role === 'technician')",
+          "exported": false
+        },
+        {
+          "name": "pendingCount",
+          "kind": "function",
+          "line": 67,
+          "signature": "const pendingCount = staff.filter(s => !s.approved).length",
+          "exported": false
+        },
+        {
+          "name": "assignForeman",
+          "kind": "function",
+          "line": 69,
+          "signature": "async function assignForeman(vehicleId, foremanId) {",
+          "exported": false
+        },
+        {
+          "name": "changeRole",
+          "kind": "function",
+          "line": 74,
+          "signature": "async function changeRole(userId, role) {",
+          "exported": false
+        },
+        {
+          "name": "toggleApproved",
+          "kind": "function",
+          "line": 79,
+          "signature": "async function toggleApproved(userId, approved) {",
+          "exported": false
+        },
+        {
+          "name": "createTask",
+          "kind": "function",
+          "line": 84,
+          "signature": "async function createTask(e) {",
+          "exported": false
+        }
+      ],
+      "imports": [
+        "react",
+        "../lib/supabase",
+        "../lib/AuthContext",
+        "../components/StatusBadge",
+        "../components/RepairTicketForm",
+        "../components/RecordFilterBar",
+        "../components/RepairItemsPreview"
+      ],
+      "indexedAt": 1786413324853
+    },
+    "src/pages/LoginPage.jsx": {
+      "path": "src/pages/LoginPage.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "7653a3315a7263aa02ee107efa99e27eb85f1a65",
+      "size": 5277,
+      "lines": 126,
+      "symbols": [
+        {
+          "name": "SIGNUP_ROLES",
+          "kind": "constant",
+          "line": 4,
+          "signature": "const SIGNUP_ROLES = [",
+          "exported": false
+        },
+        {
+          "name": "handleSubmit",
+          "kind": "function",
+          "line": 21,
+          "signature": "async function handleSubmit(e) {",
+          "exported": false
+        }
+      ],
+      "imports": [
+        "react",
+        "../lib/supabase"
+      ],
+      "indexedAt": 1786413325061
+    },
+    "src/pages/ForemanDashboard.jsx": {
+      "path": "src/pages/ForemanDashboard.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "e0a56e573179b05818c242d24dbcf0795177d376",
+      "size": 7139,
+      "lines": 126,
+      "symbols": [
+        {
+          "name": "TASK_STATUS_LABELS",
+          "kind": "constant",
+          "line": 8,
+          "signature": "const TASK_STATUS_LABELS = { pending: 'Chờ xử lý', in_progress: 'Đang thực hiện', completed: 'Hoàn thành' }",
+          "exported": false
+        },
+        {
+          "name": "loadAll",
+          "kind": "function",
+          "line": 17,
+          "signature": "async function loadAll() {",
+          "exported": false
+        },
+        {
+          "name": "updateStatus",
+          "kind": "function",
+          "line": 41,
+          "signature": "async function updateStatus(vehicleId, status) {",
+          "exported": false
+        },
+        {
+          "name": "submitInspection",
+          "kind": "function",
+          "line": 47,
+          "signature": "async function submitInspection(vehicleId) {",
+          "exported": false
+        }
+      ],
+      "imports": [
+        "react",
+        "../lib/supabase",
+        "../lib/AuthContext",
+        "../components/StatusBadge",
+        "../components/RepairItemsPreview"
+      ],
+      "indexedAt": 1786413325734
+    },
+    "src/pages/AdvisorDashboard.jsx": {
+      "path": "src/pages/AdvisorDashboard.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "4a81eeeb37e50fed3defbe059e51f3374aebe336",
+      "size": 5207,
+      "lines": 123,
+      "symbols": [
+        {
+          "name": "loadVehicles",
+          "kind": "function",
+          "line": 15,
+          "signature": "async function loadVehicles() {",
+          "exported": false
+        },
+        {
+          "name": "filtered",
+          "kind": "function",
+          "line": 43,
+          "signature": "const filtered = useMemo(() => {",
+          "exported": false
+        }
+      ],
+      "imports": [
+        "react",
+        "../lib/supabase",
+        "../components/StatusBadge",
+        "../components/RepairTicketForm",
+        "../components/RecordFilterBar",
+        "../components/RepairItemsPreview"
+      ],
+      "indexedAt": 1786413325803
+    },
+    "src/App.jsx": {
+      "path": "src/App.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "bf7ef99647b7014412a5a1eef42bbd17d9df29b2",
+      "size": 2262,
+      "lines": 60,
+      "symbols": [
+        {
+          "name": "Gate",
+          "kind": "function",
+          "line": 9,
+          "signature": "function Gate() {",
+          "exported": false
+        }
+      ],
+      "imports": [
+        "./lib/AuthContext",
+        "./components/Layout",
+        "./pages/LoginPage",
+        "./pages/AdvisorDashboard",
+        "./pages/ManagementDashboard",
+        "./pages/ForemanDashboard",
+        "./pages/TechnicianDashboard"
+      ],
+      "indexedAt": 1786413325819
+    },
+    "src/lib/teams.js": {
+      "path": "src/lib/teams.js",
+      "language": "javascript",
+      "role": "util",
+      "hash": "09a657946698a1791a8f619553a2e6b3221296ac",
+      "size": 1069,
+      "lines": 44,
+      "symbols": [
+        {
+          "name": "REPAIR_TEAMS",
+          "kind": "constant",
+          "line": 4,
+          "signature": "export const REPAIR_TEAMS = [",
+          "exported": true
+        },
+        {
+          "name": "emptyRepairItem",
+          "kind": "function",
+          "line": 17,
+          "signature": "export function emptyRepairItem() {",
+          "exported": true
+        },
+        {
+          "name": "formatTimeRangeVN",
+          "kind": "function",
+          "line": 29,
+          "signature": "export function formatTimeRangeVN(start, end) {",
+          "exported": true
+        },
+        {
+          "name": "fmt",
+          "kind": "function",
+          "line": 30,
+          "signature": "const fmt = (v) => {",
+          "exported": false
+        }
+      ],
+      "imports": [],
+      "indexedAt": 1786413325892
+    },
+    "src/components/RepairTicketForm.jsx": {
+      "path": "src/components/RepairTicketForm.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "76824a06684ab70d7518a4aa9194b8df11a5aaf8",
+      "size": 7144,
+      "lines": 161,
+      "symbols": [
+        {
+          "name": "updateItem",
+          "kind": "function",
+          "line": 23,
+          "signature": "function updateItem(key, patch) {",
+          "exported": false
+        },
+        {
+          "name": "addItem",
+          "kind": "function",
+          "line": 27,
+          "signature": "function addItem() {",
+          "exported": false
+        },
+        {
+          "name": "removeItem",
+          "kind": "function",
+          "line": 31,
+          "signature": "function removeItem(key) {",
+          "exported": false
+        },
+        {
+          "name": "handleCreate",
+          "kind": "function",
+          "line": 35,
+          "signature": "async function handleCreate(e) {",
+          "exported": false
+        },
+        {
+          "name": "activeItems",
+          "kind": "function",
+          "line": 39,
+          "signature": "const activeItems = items.filter(it => it.description.trim())",
+          "exported": false
+        }
+      ],
+      "imports": [
+        "react",
+        "../lib/supabase",
+        "../lib/AuthContext",
+        "../lib/teams"
+      ],
+      "indexedAt": 1786413325930
+    },
+    "src/components/StatusBadge.jsx": {
+      "path": "src/components/StatusBadge.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "fba665f946d3b8da3568971c2bc9c3ad9cd20ee2",
+      "size": 201,
+      "lines": 6,
+      "symbols": [],
+      "imports": [
+        "../lib/supabase"
+      ],
+      "indexedAt": 1786413325951
+    },
+    "src/components/RepairItemsPreview.jsx": {
+      "path": "src/components/RepairItemsPreview.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "34e97e071e6c9a28df30cf621fda10ab0f808949",
+      "size": 1583,
+      "lines": 36,
+      "symbols": [
+        {
+          "name": "TASK_STATUS_LABELS",
+          "kind": "constant",
+          "line": 35,
+          "signature": "const TASK_STATUS_LABELS = { pending: 'Chờ xử lý', in_progress: 'Đang thực hiện', completed: 'Hoàn thành' }",
+          "exported": false
+        }
+      ],
+      "imports": [
+        "../lib/teams"
+      ],
+      "indexedAt": 1786413325981
+    },
+    "src/lib/supabase.js": {
+      "path": "src/lib/supabase.js",
+      "language": "javascript",
+      "role": "util",
+      "hash": "dc97384512de071b8f1ea8bf1ac19cbc761ada4b",
+      "size": 1552,
+      "lines": 53,
+      "symbols": [
+        {
+          "name": "ROLES",
+          "kind": "constant",
+          "line": 8,
+          "signature": "export const ROLES = {",
+          "exported": true
+        },
+        {
+          "name": "VEHICLE_STATUSES",
+          "kind": "constant",
+          "line": 15,
+          "signature": "export const VEHICLE_STATUSES = [",
+          "exported": true
+        },
+        {
+          "name": "STATUS_LABELS",
+          "kind": "constant",
+          "line": 24,
+          "signature": "export const STATUS_LABELS = {",
+          "exported": true
+        },
+        {
+          "name": "TIMEZONE",
+          "kind": "constant",
+          "line": 33,
+          "signature": "export const TIMEZONE = 'Asia/Ho_Chi_Minh'",
+          "exported": true
+        },
+        {
+          "name": "formatDateVN",
+          "kind": "function",
+          "line": 35,
+          "signature": "export function formatDateVN(value) {",
+          "exported": true
+        },
+        {
+          "name": "formatDateTimeVN",
+          "kind": "function",
+          "line": 41,
+          "signature": "export function formatDateTimeVN(value) {",
+          "exported": true
+        },
+        {
+          "name": "todaySaigon",
+          "kind": "function",
+          "line": 47,
+          "signature": "export function todaySaigon() {",
+          "exported": true
+        },
+        {
+          "name": "map",
+          "kind": "function",
+          "line": 50,
+          "signature": "const map = Object.fromEntries(parts.map(p => [p.type, p.value]))",
+          "exported": false
+        }
+      ],
+      "imports": [
+        "@supabase/supabase-js"
+      ],
+      "indexedAt": 1786413326010
+    },
+    "src/components/RecordFilterBar.jsx": {
+      "path": "src/components/RecordFilterBar.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "4a9561ceac198638112d2209e9d821c0e718d3e9",
+      "size": 939,
+      "lines": 23,
+      "symbols": [],
+      "imports": [
+        "../lib/supabase"
+      ],
+      "indexedAt": 1786413326036
+    },
+    "src/components/Layout.jsx": {
+      "path": "src/components/Layout.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "1f60e0a7568e950bacc438ac723a47e97ad357f8",
+      "size": 2035,
+      "lines": 52,
+      "symbols": [],
+      "imports": [
+        "../lib/AuthContext",
+        "../lib/supabase"
+      ],
+      "indexedAt": 1786413326066
+    },
+    "src/lib/AuthContext.jsx": {
+      "path": "src/lib/AuthContext.jsx",
+      "language": "javascriptreact",
+      "role": "component",
+      "hash": "433673cfbfe7126057f9582b582c5b157481e53b",
+      "size": 1375,
+      "lines": 53,
+      "symbols": [
+        {
+          "name": "AuthProvider",
+          "kind": "function",
+          "line": 6,
+          "signature": "export function AuthProvider({ children }) {",
+          "exported": true
+        },
+        {
+          "name": "loadProfile",
+          "kind": "function",
+          "line": 11,
+          "signature": "async function loadProfile(userId) {",
+          "exported": false
+        },
+        {
+          "name": "useAuth",
+          "kind": "function",
+          "line": 50,
+          "signature": "export function useAuth() {",
+          "exported": true
+        }
+      ],
+      "imports": [
+        "react",
+        "./supabase"
+      ],
+      "indexedAt": 1786413326068
+    }
+  },
+  "architecture": [
+    {
+      "role": "component",
+      "label": "Components",
+      "files": [
+        "src/App.jsx",
+        "src/components/Layout.jsx",
+        "src/components/RecordFilterBar.jsx",
+        "src/components/RepairItemsPreview.jsx",
+        "src/components/RepairTicketForm.jsx",
+        "src/components/StatusBadge.jsx",
+        "src/lib/AuthContext.jsx",
+        "src/main.jsx",
+        "src/pages/AdvisorDashboard.jsx",
+        "src/pages/ForemanDashboard.jsx",
+        "src/pages/LoginPage.jsx",
+        "src/pages/ManagementDashboard.jsx",
+        "src/pages/TechnicianDashboard.jsx"
+      ]
+    },
+    {
+      "role": "util",
+      "label": "Shared Utilities",
+      "files": [
+        "src/lib/supabase.js",
+        "src/lib/teams.js"
+      ]
+    },
+    {
+      "role": "config",
+      "label": "Configuration",
+      "files": [
+        "vite.config.js"
+      ]
+    }
+  ]
+}

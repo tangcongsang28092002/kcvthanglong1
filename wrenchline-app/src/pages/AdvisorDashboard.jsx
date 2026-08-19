@@ -6,6 +6,7 @@ import RecordFilterBar from '../components/RecordFilterBar'
 import RepairItemsPreview from '../components/RepairItemsPreview'
 import PaintOrderForm from '../components/PaintOrderForm'
 import PaintOrdersTable from '../components/PaintOrdersTable'
+import { withViewTransition } from '../lib/viewTransition'
 
 const MAIN_TABS = [
   { key: 'vehicles', label: 'Tiếp nhận & Phiếu xe' },
@@ -78,7 +79,10 @@ export default function AdvisorDashboard() {
       .from('paint_orders')
       .select('*, creator:created_by(full_name), handler:assigned_to(full_name)')
       .order('created_at', { ascending: false })
-    setPaintOrders(data || [])
+    // This screen never shows a loading placeholder for these refreshes, so
+    // there was no scroll-jump bug here — but wrapping in a view transition
+    // still turns row-reorder into a smooth slide instead of an instant snap.
+    withViewTransition(() => setPaintOrders(data || []))
   }
 
   useEffect(() => {
